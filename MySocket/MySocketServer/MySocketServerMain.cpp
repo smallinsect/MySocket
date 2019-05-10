@@ -9,6 +9,30 @@
 #include <iostream>
 using namespace std;
 
+enum CMD{
+	CMD_LOGIN,
+	CMD_LOGINOUT,
+	CMD_ERROR
+};
+struct DataHeader{
+	short cmd;
+	short dataLength;
+};
+struct Login{
+	char userName[32];
+	char passWord[32];
+};
+struct LoginResult{
+	int result;
+};
+struct Loginout{
+	char userName[32];
+};
+struct LoginoutResult{
+	int result;
+};
+
+
 int main(){
 	cout << "Hell world server ..." << endl;
 
@@ -47,17 +71,54 @@ int main(){
 	SOCKET cSocket;
 	SOCKADDR_IN caddr = {};
 	int caddrlen = sizeof(caddr);
+	cSocket = accept( sSocket, (SOCKADDR *)&caddr, &caddrlen);
+	if(cSocket == INVALID_SOCKET){
+		cout << "accept error ..." << endl;
+		return -1;
+	}
+	cout << "accopet success ..." << endl;
+	cout << "client ip : " << inet_ntoa(caddr.sin_addr) << endl;
+	cout << "client port : " << caddr.sin_port << endl;
+
 	while(true){
-		cSocket = accept( sSocket, (SOCKADDR *)&caddr, &caddrlen);
-		if(cSocket == INVALID_SOCKET){
-			cout << "accept error ..." << endl;
+		DataHeader header = {};
+		int nLen = recv(cSocket, (char *)&header, sizeof(DataHeader), 0);
+		if(nLen == SOCKET_ERROR){
+			cout << "recv error ..." << endl;
+			return -1;
+		}
+		cout << "recv success ..." << endl;
+		cout << "client cmd : " << header.cmd << endl;
+		switch(header.cmd){
+		case CMD_LOGIN:
+			{
+				Login login = {};
+				recv(cSocket, (char *)&login, sizeof(Login), 0);
+				cout << "userName : " << login.userName << endl;
+				cout << "passWord : " << login.passWord << endl;
+				LoginResult ret = {1};
+				send(cSocket, (const char *)&header, sizeof(DataHeader), 0);
+				send(cSocket, (const char *)&ret, sizeof(LoginResult), 0);
+			}
+			break;
+		case CMD_LOGINOUT:
+			{
+				Loginout loginout = {};
+				recv(cSocket, (char *)&loginout, sizeof(Loginout), 0);
+				cout << "userName : " << loginout.userName << endl;
+				LoginoutResult ret = {2};
+				send(cSocket, (const char *)&header, sizeof(DataHeader), 0);
+				send(cSocket, (const char *)&ret, sizeof(LoginoutResult), 0);
+			}
+			break;
+		default:
+			{
+				header.cmd = CMD_ERROR;
+				header.dataLength = 0;
+				send(cSocket, (char *)&header, sizeof(DataHeader), 0);
+			}
 			break;
 		}
-		cout << "accopet success ..." << endl;
-		cout << "client ip : " << inet_ntoa(caddr.sin_addr) << endl;
-		cout << "client port : " << caddr.sin_port << endl;
-
-		send(cSocket, buf, strlen(buf), 0);
 	}
 
 	WSACleanup();

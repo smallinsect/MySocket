@@ -9,6 +9,29 @@
 #include <iostream>
 using namespace std;
 
+enum CMD{
+	CMD_LOGIN,
+	CMD_LOGINOUT,
+	CMD_ERROR
+};
+struct DataHeader{
+	short cmd;
+	short dataLength;
+};
+struct Login{
+	char userName[32];
+	char passWord[32];
+};
+struct LoginResult{
+	int result;
+};
+struct Loginout{
+	char userName[32];
+};
+struct LoginoutResult{
+	int result;
+};
+
 int main(){
 	cout << "Hell world client ..." << endl;
 
@@ -36,14 +59,42 @@ int main(){
 	}
 	cout << "connect success ..." << endl;
 
-	char buf[1024] = "";
-	if(recv(cSocket, buf, sizeof(buf), 0) == SOCKET_ERROR){
-		cout << "recv error ..." << endl;
-		return -1;
-	}
-	cout << "recv success ..." << endl;
+	while(true){
+		char cmdBuf[1024] = "";
+		cout << "input cmd >>";
+		cin >> cmdBuf;
+		if(strcmp(cmdBuf, "exit") == 0){
+			cout << "exit client ..." << endl;
+			break;
+		}else if(strcmp(cmdBuf, "login") == 0){
+			Login login = {"°®°×²Ë", "Ð¡À¥³æ"};
+			DataHeader dh = { CMD_LOGIN, sizeof(Login)};
+			send(cSocket, (const char *)&dh, sizeof(DataHeader), 0);
+			send(cSocket, (const char *)&login, sizeof(Login), 0);
 
-	cout << "server : " << buf << endl;
+			DataHeader retHeader = {};
+			LoginResult loginRet = {};
+			recv(cSocket, (char *)&retHeader, sizeof(DataHeader), 0);
+			recv(cSocket, (char *)&loginRet, sizeof(LoginResult), 0);
+
+			cout << "LoginResult: " << loginRet.result << endl;
+		}else if(strcmp(cmdBuf, "logout") == 0){
+			Loginout logout = {"°®°×²ËµÄÐ¡À¥³æ"};
+			DataHeader dh = { CMD_LOGINOUT, sizeof(Loginout)};
+			
+			send(cSocket, (const char *)&dh, sizeof(DataHeader), 0);
+			send(cSocket, (const char *)&logout, sizeof(Loginout), 0);
+
+			DataHeader retHeader = {};
+			LoginoutResult logoutRet = {};
+			recv(cSocket, (char *)&retHeader, sizeof(DataHeader), 0);
+			recv(cSocket, (char *)&logoutRet, sizeof(LoginResult), 0);
+
+			cout << "LogoutResult: " << logoutRet.result << endl;
+		}else{
+			cout << "cmd error" << endl;
+		}
+	}
 
 	WSACleanup();
 
