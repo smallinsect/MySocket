@@ -1,3 +1,4 @@
+#define WIN32_LEAN_AND_MEAN
 
 #include <string.h>
 
@@ -27,8 +28,22 @@ int main(){
 	SOCKADDR_IN saddr;
 	saddr.sin_family = AF_INET;
 	saddr.sin_port = htons(8000);
+	saddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
 	
-	connect(cSocket, (SOCKADDR*)&saddr, sizeof(saddr));
+	if(connect(cSocket, (SOCKADDR*)&saddr, sizeof(saddr)) == SOCKET_ERROR){
+		cout << "connect error ..." << endl;
+		return -1;
+	}
+	cout << "connect success ..." << endl;
+
+	char buf[1024] = "";
+	if(recv(cSocket, buf, sizeof(buf), 0) == SOCKET_ERROR){
+		cout << "recv error ..." << endl;
+		return -1;
+	}
+	cout << "recv success ..." << endl;
+
+	cout << "server : " << buf << endl;
 
 	WSACleanup();
 

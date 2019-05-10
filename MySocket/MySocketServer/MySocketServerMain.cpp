@@ -1,3 +1,4 @@
+#define WIN32_LEAN_AND_MEAN
 
 #include <string.h>
 
@@ -36,10 +37,25 @@ int main(){
 	}
 	cout << "bind success ..." << endl;
 
+	if(listen(sSocket, 5) == SOCKET_ERROR){
+		cout << "listen error ..." << endl;
+		return -1;
+	}
+	cout << "listen success ..." << endl;
+
 	char buf[1024] = "爱白菜的小昆虫服务器收到消息了";
 	SOCKET cSocket;
+	SOCKADDR_IN caddr = {};
+	int caddrlen = sizeof(caddr);
 	while(true){
-		cSocket = listen( sSocket, 5);
+		cSocket = accept( sSocket, (SOCKADDR *)&caddr, &caddrlen);
+		if(cSocket == INVALID_SOCKET){
+			cout << "accept error ..." << endl;
+			break;
+		}
+		cout << "accopet success ..." << endl;
+		cout << "client ip : " << inet_ntoa(caddr.sin_addr) << endl;
+		cout << "client port : " << caddr.sin_port << endl;
 
 		send(cSocket, buf, strlen(buf), 0);
 	}
