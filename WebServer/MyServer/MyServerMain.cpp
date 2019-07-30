@@ -3,15 +3,8 @@
 // 服务器端程序
 //
 //////////////////////////////////////////////////////////////////////////
-#define WIN32_LEAN_AND_MEAN
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
-#include <winsock2.h>
 
-#pragma comment(lib, "ws2_32.lib")
+#include "MyWeb.h"
 
 int main(int argc, char *argv[]) {
 	puts("hello world");
@@ -28,10 +21,11 @@ int main(int argc, char *argv[]) {
 	}
 	puts("socket success ...");
 	//服务器绑定IP和端口
-	sockaddr_in saddr;
+	sockaddr_in saddr = {0};
 	saddr.sin_family = AF_INET;
 	saddr.sin_port = htons(8080);
-	saddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+	//saddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+	//不设置ip，bind自动绑定本机ip地址。
 	if (bind(serverSocket, (const sockaddr *)&saddr, sizeof(sockaddr_in)) == SOCKET_ERROR) {
 		puts("bind error ...");
 		system("pause");
@@ -47,26 +41,29 @@ int main(int argc, char *argv[]) {
 	}
 	puts("listen success ...");
 
-	sockaddr_in clientAddr = {0};
-	int clientAddrLen = sizeof(sockaddr_in);
-	SOCKET clientSocket = accept(serverSocket, (sockaddr *)&clientAddr, &clientAddrLen);
-	if (clientSocket == INVALID_SOCKET) {
-		puts("accept error ...");
-		system("pause");
-		exit(-1);
-	}
-	puts("accept success ...");
-
-
-	char buf[1024];
 	while (true) {
-		memset(buf, 0, sizeof(buf));
-		if (recv(clientSocket, buf, 1024, 0) == SOCKET_ERROR) {
-			puts("recv error ...");
+		sockaddr_in clientAddr = { 0 };
+		int clientAddrLen = sizeof(sockaddr_in);
+		SOCKET clientSocket = accept(serverSocket, (sockaddr *)&clientAddr, &clientAddrLen);
+		if (clientSocket == INVALID_SOCKET) {
+			puts("accept error ...");
 			system("pause");
 			exit(-1);
 		}
-		printf("%s", buf);
+		puts("accept success ...");
+		printf("client ip: %s\n", inet_ntoa(clientAddr.sin_addr));
+		printf("client port:%d\n", clientAddr.sin_port);
+
+		while (true) {
+			//接受浏览器请求
+			if (Request(clientSocket) != 0) {
+				break;
+			}
+			//响应浏览器请求
+			Response(clientSocket);
+		}
+		closesocket(clientSocket);
+		printf("client quit ...\n");
 	}
 
 	closesocket(serverSocket);

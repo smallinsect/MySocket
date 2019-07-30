@@ -18,5 +18,16 @@
     <ClCompile Include="MyServerMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="MyWeb.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="HeaderFiles.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MyWeb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -131,6 +131,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MyServerMain.cpp" />
+    <ClCompile Include="MyWeb.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="HeaderFiles.h" />
+    <ClInclude Include="MyWeb.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
