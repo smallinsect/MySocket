@@ -16,25 +16,28 @@ int Request(SOCKET s) {
 	memset(buf, 0, sizeof(buf));
 	int len = recv(s, buf, 1024, 0);
 	if (len == SOCKET_ERROR) {
-		printf("recv error ...\n");
-		return -1;
+		printf("[server] recv error ...\n");
+		return len;
 	}
 	if (len == 0) {
-		printf("client quit ...\n");
-		return -1;
+		printf("[server] client quit ...\n");
+		return len;
 	}
-	printf("recv success ...\n");
+	printf("[server] recv success ...\n");
+	printf("......................request message begin......................\n");
 	printf("%s", buf);
+	printf("......................request message end........................\n");
 
 	memset(method, 0, sizeof(method));
 	memset(URI, 0, sizeof(URI));
 	memset(protocol, 0, sizeof(protocol));
 	sscanf(buf, "%s %s %s", method, URI, protocol);
+	printf("request message method=%s, URI=%s, protocol=%s\n", method, URI, protocol);
 
 	memset(fileType, 0, sizeof(fileType));
 	sscanf(URI, "%[^.]%[^ ?]", fileType, fileType);
-	printf("fileTpye=%s\n", fileType);
-	return 0;
+	printf("request message fileTpye=%s\n", fileType);
+	return len;
 }
 
 void Response(SOCKET s) {
