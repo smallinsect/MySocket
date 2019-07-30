@@ -5,9 +5,11 @@
 #define PATHWEB "./webui"
 
 
-char type[16];
-char reso[64];
-char vers[32];
+char method[16];
+char URI[64];
+char protocol[32];
+
+char fileType[32];
 
 int Request(SOCKET s) {
 	char buf[1024];
@@ -24,22 +26,26 @@ int Request(SOCKET s) {
 	printf("recv success ...\n");
 	printf("%s", buf);
 
-	memset(type, 0, sizeof(type));
-	memset(reso, 0, sizeof(reso));
-	memset(vers, 0, sizeof(vers));
-	sscanf(buf, "%s %s %s", type, reso, vers);
+	memset(method, 0, sizeof(method));
+	memset(URI, 0, sizeof(URI));
+	memset(protocol, 0, sizeof(protocol));
+	sscanf(buf, "%s %s %s", method, URI, protocol);
+
+	memset(fileType, 0, sizeof(fileType));
+	sscanf(URI, "%[^.]%[^ ?]", fileType, fileType);
+	printf("fileTpye=%s\n", fileType);
 	return 0;
 }
 
 void Response(SOCKET s) {
 	char buf[1024] = {0};
-	int bufLen = sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=gb2312\r\n");
-
+	int bufLen = sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type: %s; charset=gb2312\r\n", getContentType(fileType).c_str());
 	char file[1024] = {0};
-	sprintf(file, "%s%s", PATHWEB, reso);
+	sprintf(file, "%s%s", PATHWEB, URI);
 	printf("请求文件路径：%s\n", file);
 
 	FILE *f = fopen(file, "rb");
+	//打开文件失败
 	if (f == NULL) {
 		static char defPage[] = "<html><b><center>404 not find!</center></b></html>";
 		printf("读取文件失败\n");
@@ -48,6 +54,7 @@ void Response(SOCKET s) {
 		printf("响应消息：\n%s", buf);
 		return;
 	}
+
 	fseek(f, 0, SEEK_END);
 	int contentLength = ftell(f);
 	bufLen += sprintf(buf + bufLen, "Content-Length: %d\r\n\r\n", contentLength);
@@ -66,4 +73,43 @@ void Response(SOCKET s) {
 	}
 
 	fclose(f);
+}
+
+std::string getContentType(const std::string &fileType) {
+	std::string contentType = "";
+
+	if (fileType == ".htm") {
+		contentType = "text/html";
+	}
+	else if (fileType == ".html") {
+		contentType = "text/html";
+	}
+	else if (fileType == ".css") {
+		contentType = "text/css";
+	}
+	else if (fileType == ".js") {
+		contentType = "application/x-javascript";
+	}
+	else if (fileType == ".xml") {
+		contentType = "text/xml";
+	}
+	else if (fileType == ".txt") {
+		contentType = "text/plain";
+	}
+	else if (fileType == ".bmp") {
+		contentType = "application/x-bmp";
+	}
+	else if (fileType == ".jpg") {
+		contentType = "application/x-jpg";
+	}
+	else if (fileType == ".png") {
+		contentType = "application/x-png";
+	}	
+	else if (fileType == ".gif") {
+		contentType = "image/gif";
+	}
+	else if (fileType == ".ico") {
+		contentType = "image/x-icon";
+	}
+	return contentType;
 }
