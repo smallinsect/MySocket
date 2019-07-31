@@ -5,4 +5,4 @@
 int Request(SOCKET s);
 void Response(SOCKET s);
 
-std::string getContentType(const std::string &fileType);
+string getContentType(const string &fileType);

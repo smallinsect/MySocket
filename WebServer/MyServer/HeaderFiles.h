@@ -4,7 +4,12 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 
+#include <map>
 #include <string>
+#include <sstream>
+#include <iostream>
+
+using namespace std;
 
 #include <stdio.h>
 #include <stdlib.h>

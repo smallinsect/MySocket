@@ -44,6 +44,14 @@ int main(int argc, char *argv[]) {
 	FD_ZERO(&fds);
 	FD_SET(serverSocket, &fds);
 
+	map<SOCKET, string> mSocketInfo;
+	ostringstream ostr;
+	ostr << "[server] socket:"<< serverSocket << " ip:" << inet_ntoa(saddr.sin_addr) << " port:" << saddr.sin_port;
+	cout << ostr.str() << endl;
+
+	mSocketInfo.insert(pair<SOCKET, string>(serverSocket, ostr.str()));
+	ostr.str("");//«Âø’ ‰»Î¡˜
+
 	timeval tv;
 	tv.tv_sec = 0;
 	tv.tv_usec = 1000;
@@ -62,9 +70,13 @@ int main(int argc, char *argv[]) {
 					system("pause");
 					exit(-1);
 				}
-				printf("[client] %s:%d accept success ...\n", inet_ntoa(clientAddr.sin_addr), clientAddr.sin_port);
 
 				FD_SET(clientSocket, &fds);
+
+				ostr << "[client] socket:" << clientSocket << " ip:" << inet_ntoa(clientAddr.sin_addr) << " port:" << clientAddr.sin_port;
+				cout << ostr.str() << endl;
+				mSocketInfo.insert(pair<SOCKET, string>(clientSocket, ostr.str()));
+				ostr.str("");
 
 				continue;
 			}
@@ -78,6 +90,14 @@ int main(int argc, char *argv[]) {
 				SOCKET clientSocket = fdsTemp.fd_array[i];
 				FD_CLR(fdsTemp.fd_array[i], &fds);
 				closesocket(clientSocket);
+				map<SOCKET, string>::iterator iterFind = mSocketInfo.find(clientSocket);
+				if (iterFind != mSocketInfo.end()) {
+					printf("%s quit ...\n", iterFind->second.c_str());
+					mSocketInfo.erase(iterFind);
+				}
+				else {
+					printf("[client] ???? quit ...\n");
+				}
 			}
 		}
 	}

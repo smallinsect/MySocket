@@ -47,6 +47,8 @@ void Response(SOCKET s) {
 	sprintf(file, "%s%s", PATHWEB, URI);
 	printf("请求文件路径：%s\n", file);
 
+
+	printf("......................response message header begin......................\n");
 	FILE *f = fopen(file, "rb");
 	//打开文件失败
 	if (f == NULL) {
@@ -54,7 +56,7 @@ void Response(SOCKET s) {
 		printf("读取文件失败\n");
 		bufLen += sprintf(buf + bufLen, "Content-Length: %d\r\n\r\n%s", strlen(defPage), defPage);
 		send(s, buf, strlen(buf), 0);
-		printf("响应消息：\n%s", buf);
+		printf("[server] response message ：\n%s", buf);
 		return;
 	}
 
@@ -63,23 +65,29 @@ void Response(SOCKET s) {
 	bufLen += sprintf(buf + bufLen, "Content-Length: %d\r\n\r\n", contentLength);
 	send(s, buf, strlen(buf), 0);
 	printf("响应消息：\n%s", buf);
+	printf("......................response message header end.........................\n");
 	fseek(f, 0, SEEK_SET);
 
+
+	printf("......................response message content begin......................\n");
 	size_t len;
+	memset(buf, 0, sizeof(buf));
 	while ((len = fread(buf, sizeof(char), sizeof(buf), f)) > 0) {
 		printf("%s", buf);
 		if (send(s, buf, len, 0) == SOCKET_ERROR) {
-			printf("send error ...\n");
+			printf("\n[server] send error ...\n");
 			break;
 		}
-		printf("send success ...\n");
+		printf("\n[server] send success ...\n");
+		memset(buf, 0, sizeof(buf));
 	}
+	printf("......................response message content end........................\n");
 
 	fclose(f);
 }
 
-std::string getContentType(const std::string &fileType) {
-	std::string contentType = "";
+string getContentType(const string &fileType) {
+	string contentType = "";
 
 	if (fileType == ".htm") {
 		contentType = "text/html";
