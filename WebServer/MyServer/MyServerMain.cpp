@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 	map<SOCKET, string> mSocketInfo;
 	ostringstream ostr;
 	ostr << "[server] socket:"<< serverSocket << " ip:" << inet_ntoa(saddr.sin_addr) << " port:" << saddr.sin_port;
-	cout << ostr.str() << endl;
+	cout << ostr.str() << " accept ...\n";
 
 	mSocketInfo.insert(pair<SOCKET, string>(serverSocket, ostr.str()));
 	ostr.str("");//Çå¿ÕÊäÈëÁ÷
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
 				FD_SET(clientSocket, &fds);
 
 				ostr << "[client] socket:" << clientSocket << " ip:" << inet_ntoa(clientAddr.sin_addr) << " port:" << clientAddr.sin_port;
-				cout << ostr.str() << endl;
+				cout << ostr.str() << " accept ...\n";
 				mSocketInfo.insert(pair<SOCKET, string>(clientSocket, ostr.str()));
 				ostr.str("");
 
@@ -92,11 +92,11 @@ int main(int argc, char *argv[]) {
 				closesocket(clientSocket);
 				map<SOCKET, string>::iterator iterFind = mSocketInfo.find(clientSocket);
 				if (iterFind != mSocketInfo.end()) {
-					printf("%s quit ...\n", iterFind->second.c_str());
+					cout << iterFind->second.c_str() << " quit ...\n";
 					mSocketInfo.erase(iterFind);
 				}
 				else {
-					printf("[client] ???? quit ...\n");
+					cout << "[client] ??? quit ...\n";
 				}
 			}
 		}

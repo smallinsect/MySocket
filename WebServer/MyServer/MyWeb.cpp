@@ -47,7 +47,6 @@ void Response(SOCKET s) {
 	sprintf(file, "%s%s", PATHWEB, URI);
 	printf("请求文件路径：%s\n", file);
 
-
 	printf("......................response message header begin......................\n");
 	FILE *f = fopen(file, "rb");
 	//打开文件失败
@@ -64,7 +63,7 @@ void Response(SOCKET s) {
 	int contentLength = ftell(f);
 	bufLen += sprintf(buf + bufLen, "Content-Length: %d\r\n\r\n", contentLength);
 	send(s, buf, strlen(buf), 0);
-	printf("响应消息：\n%s", buf);
+	printf("%s", buf);
 	printf("......................response message header end.........................\n");
 	fseek(f, 0, SEEK_SET);
 
@@ -78,7 +77,6 @@ void Response(SOCKET s) {
 			printf("\n[server] send error ...\n");
 			break;
 		}
-		printf("\n[server] send success ...\n");
 		memset(buf, 0, sizeof(buf));
 	}
 	printf("......................response message content end........................\n");
