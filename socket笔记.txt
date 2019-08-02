@@ -1,0 +1,13 @@
+查看所有服务器的端口
+tasklist /svc | find "MyServer."
+
+查看程序端口
+netstat -ano | find "14960"
+
+查看远程端口是否监听
+telnet 10.0.144.59 8080
+telnet ip地址 端口号
+Telnet不是内部或外部命令，控制面板->程序和功能->启动或关闭windows功能->找到telnet客户端，打上勾就可以了。
+
+socket的bind，如果没有设置ip，自动绑定本机ip。
+
