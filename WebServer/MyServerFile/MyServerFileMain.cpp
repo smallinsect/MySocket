@@ -5,29 +5,45 @@
 int main(int argc, char *argv[]) {
 
 	WSADATA wd;
-	WSAStartup(MAKEWORD(2,2), &wd);
+	int iRes = WSAStartup(MAKEWORD(2,2), &wd);
+	if (iRes != 0) {
+		printf("[server] WSAStartup error %d ...\n", iRes);
+		system("pause");
+		return -1;
+	}
+
+	addrinfo hints, *result = NULL;
+	ZeroMemory(&hints, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_protocol = IPPROTO_TCP;
+	hints.ai_socktype = SOCK_STREAM;
+
+	iRes = getaddrinfo(NULL, "8080", &hints, &result);//获取本机ip
+	if (iRes != 0) {
+		printf("[server] getaddrinfo error %d ...\n", iRes);
+		system("pause");
+		return -1;
+	}
 
 	//创建套接字
-	SOCKET sockServer = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	SOCKET sockServer = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 	if (sockServer == INVALID_SOCKET) {
-		cout << "[server] socket error ...\n";
+		printf("[server] socket error ...\n");
 		system("pause");
 		return -1;
 	}
-	cout << "[server] socket success ...\n";
-
-	sockaddr_in saddrServer = {0};
-	saddrServer.sin_family = AF_INET;//协议IPV4
-	saddrServer.sin_port = htons(8080);//端口8080
-	//saddrServer.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");//IP地址127.0.0.1
+	printf("[server] socket success ...\n");
 
 	//套接字绑定协议、端口、IP地址
-	if (bind(sockServer, (sockaddr *)&saddrServer, sizeof(sockaddr_in)) == SOCKET_ERROR) {
-		cout << "[server] bind error ...\n";
+	if (bind(sockServer, result->ai_addr, result->ai_addrlen) == SOCKET_ERROR) {
+		printf("[server] bind error ...\n");
 		system("pause");
 		return -1;
 	}
-	cout << "[server] bind success ...\n";
+	printf("[server] bind success ...\n");
+
+	freeaddrinfo(result);
 
 	//开始监听
 	if (listen(sockServer, SOMAXCONN) == SOCKET_ERROR) {
@@ -40,14 +56,6 @@ int main(int argc, char *argv[]) {
 	fd_set fdsSockets;
 	FD_ZERO(&fdsSockets);
 	FD_SET(sockServer, &fdsSockets);
-
-	ostringstream ostr;
-	ostr << "[server] socket:" << sockServer << " ip:" << inet_ntoa(saddrServer.sin_addr) << " port:" << saddrServer.sin_port;
-	cout << ostr.str() << endl;
-
-	map<SOCKET, string> mSockInfo;//socket信息
-	mSockInfo.insert(pair<SOCKET, string>(sockServer, ostr.str()));
-	ostr.str("");//清空
 
 	timeval tv = { 0, 3000 };
 	while (true) {
@@ -70,14 +78,8 @@ int main(int argc, char *argv[]) {
 					cout << "[server] accept error ...\n";
 					continue;
 				}
-				cout << "[server] accept success ...\n";
-				ostr << "[client] socket:" << sockClient << " ip:" << inet_ntoa(saddrClient.sin_addr) << " port:" << saddrClient.sin_port;
-				cout << ostr.str() << endl;
 
 				FD_SET(sockClient, &fdsSockets);
-
-				mSockInfo.insert(pair<SOCKET, string>(sockClient, ostr.str()));
-				ostr.str("");
 				continue;
 			}
 			if (request(fdsTemp.fd_array[i]) > 0) {//浏览器请求
@@ -85,14 +87,6 @@ int main(int argc, char *argv[]) {
 			}
 			else {//清理socket
 				SOCKET sockTemp = fdsTemp.fd_array[i];
-				map<SOCKET, string>::iterator itr = mSockInfo.find(sockTemp);
-				if (itr != mSockInfo.end()) {
-					cout << itr->second.c_str() << " quit ...\n";
-					mSockInfo.erase(itr);
-				}
-				else {
-					cout << "socket:" << sockTemp << " ??? quit ...\n";
-				}
 
 				FD_CLR(sockTemp, &fdsSockets);
 				closesocket(sockTemp);
