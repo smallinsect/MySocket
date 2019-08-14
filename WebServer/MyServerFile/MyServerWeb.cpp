@@ -3,6 +3,8 @@
 
 #define PATHWEB "./webui"
 
+#define MAXBUF 8096
+
 char method[8];
 char URL[1024];
 char protoVer[16];
@@ -31,46 +33,36 @@ int request(SOCKET s) {
 }
 
 void response(SOCKET s) {
-	char buf[1024] = { 0 };
-	int bufLen = sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type: %s; charset=gb2312\r\n", getContentType(fileType).c_str());
+	char resHeadBuf[1024] = { 0 };
+	int bufLen = sprintf(resHeadBuf, "HTTP/1.1 200 OK\r\nContent-Type: %s; charset=gb2312\r\n", getContentType(fileType).c_str());
 	char file[1024] = { 0 };
 	sprintf(file, "%s%s", PATHWEB, URL);
 	printf("请求文件路径：%s\n", file);
 
-	printf("......................response message header begin......................\n");
-	FILE *f = fopen(file, "rb");
-	//打开文件失败
-	if (f == NULL) {
-		static char defPage[] = "<html><b><center>404 not find!</center></b></html>";
-		printf("读取文件失败\n");
-		bufLen += sprintf(buf + bufLen, "Content-Length: %d\r\n\r\n%s", strlen(defPage), defPage);
-		send(s, buf, strlen(buf), 0);
-		printf("[server] response message ...\n%s", buf);
-		return;
+	char szContent[MAXBUF];
+	int contentLength = 0;
+	contentLength = sprintf(szContent, "<html><head><title>路径下的文件</title></head><body><table>");
+	TCHAR szPath[MAX_PATH] = TEXT("E:/smallinsect");
+	TCHAR szFilePath[MAX_PATH];
+	lstrcpy(szFilePath, szPath);
+	lstrcat(szFilePath, "/*");
+	WIN32_FIND_DATA findFileData;
+	HANDLE hListFile = FindFirstFile(szFilePath, &findFileData);
+	if (hListFile == INVALID_HANDLE_VALUE) {
+		printf("FindFirstFile error %d...\n", GetLastError());
 	}
-
-	fseek(f, 0, SEEK_END);
-	int contentLength = ftell(f);
-	bufLen += sprintf(buf + bufLen, "Content-Length: %d\r\n\r\n", contentLength);
-	send(s, buf, strlen(buf), 0);
-	printf("%s", buf);
-	printf("......................response message header end.........................\n");
-	fseek(f, 0, SEEK_SET);
-
-	printf("......................response message content begin......................\n");
-	size_t len;
-	memset(buf, 0, sizeof(buf));
-	while ((len = fread(buf, sizeof(char), sizeof(buf), f)) > 0) {
-		printf("%s", buf);
-		if (send(s, buf, len, 0) == SOCKET_ERROR) {
-			printf("\n[server] send error ...\n");
+	while (true) {
+		contentLength += sprintf(szContent + contentLength, "<tr><td><a href='./%s'>%s</a></td></tr>", findFileData.cFileName, findFileData.cFileName);
+		if (!FindNextFile(hListFile, &findFileData)) {
 			break;
 		}
-		memset(buf, 0, sizeof(buf));
 	}
-	printf("......................response message content end........................\n");
+	contentLength += sprintf(szContent + contentLength, "</table></body></html>");
 
-	fclose(f);
+	bufLen += sprintf(resHeadBuf + bufLen, "Content-Length: %d\r\n\r\n", contentLength);
+	send(s, resHeadBuf, strlen(resHeadBuf), 0);
+	send(s, szContent, contentLength, 0);
+
 }
 
 string getContentType(const string &fileType) {
