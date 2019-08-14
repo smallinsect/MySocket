@@ -2,13 +2,15 @@
 #include "MyServerWeb.h"
 
 #define PATHWEB "./webui"
+#define PATHFILE TEXT("E:/smallinsect")
 
 #define MAXBUF 8096
 
-char method[8];
+char method[32];
 char URL[1024];
 char protoVer[16];
-char fileType[16];
+char fileType[1024];
+const char *matching = ".";
 
 int request(SOCKET s) {
 	char buf[1024] = "";
@@ -25,8 +27,15 @@ int request(SOCKET s) {
 	printf("%s", buf);
 	printf("******************request header message en******************\n");
 
-	sscanf(buf, "%[^ ] %[^ ] %[^ ]", method, URL, protoVer);
-	sscanf(buf, "%[^.]%[^ ]", fileType, fileType);
+	sscanf(buf, "%[^ ] %[^ ] %[^ \r\n]", method, URL, protoVer);
+	char szTemp[1024];
+	strcpy(szTemp, URL);
+	char *p = strtok(szTemp, matching);
+	while (p) {
+		strcpy(fileType, p);
+		p = strtok(NULL, matching);
+	}
+
 	printf("fileType=%s\n", fileType);
 
 	return 1;
@@ -34,44 +43,86 @@ int request(SOCKET s) {
 
 void response(SOCKET s) {
 	char resHeadBuf[1024] = { 0 };
-	int bufLen = sprintf(resHeadBuf, "HTTP/1.1 200 OK\r\nContent-Type: %s; charset=gb2312\r\n", getContentType(fileType).c_str());
-	char file[1024] = { 0 };
-	sprintf(file, "%s%s", PATHWEB, URL);
-	printf("请求文件路径：%s\n", file);
+	int bufLen;//
+	char szContent[MAXBUF];//发送内容
+	int contentLength = 0;//内容长度
+	TCHAR szFilePath[MAX_PATH] = PATHFILE;//默认路径
+	if (fileType[0] == '/') {//文件路径
+		strcpy(fileType, ".html");
+		bufLen = sprintf(resHeadBuf, "HTTP/1.1 200 OK\r\nContent-Type: %s; charset=gb2312\r\n", getContentType(fileType).c_str());
 
-	char szContent[MAXBUF];
-	int contentLength = 0;
-	contentLength = sprintf(szContent, "<html><head><title>路径下的文件</title></head><body><table>");
-	TCHAR szPath[MAX_PATH] = TEXT("E:/smallinsect");
-	TCHAR szFilePath[MAX_PATH];
-	lstrcpy(szFilePath, szPath);
-	lstrcat(szFilePath, "/*");
-	WIN32_FIND_DATA findFileData;
-	HANDLE hListFile = FindFirstFile(szFilePath, &findFileData);
-	if (hListFile == INVALID_HANDLE_VALUE) {
-		printf("FindFirstFile error %d...\n", GetLastError());
-	}
-	while (true) {
-		contentLength += sprintf(szContent + contentLength, "<tr><td><a href='./%s'>%s</a></td></tr>", findFileData.cFileName, findFileData.cFileName);
-		if (!FindNextFile(hListFile, &findFileData)) {
-			break;
+		contentLength = sprintf(szContent, "<html><head><title>路径下的文件</title></head><body><table>");
+		size_t len = strlen(URL);
+		while (len > 1 && URL[len-1] == '/') {//去掉末尾/
+			URL[len - 1] = '\0';
+			--len;
 		}
-	}
-	contentLength += sprintf(szContent + contentLength, "</table></body></html>");
+		if (len == 1) {//默认目录
+			URL[0] = '\0';
+		}
+		if (strstr(URL, "/.")) {//当前目录
+			URL[len - 2] = '\0';
+		}
+		if (strstr(URL, "/..")) {//上级目录
+			len = len - 3;//去掉/..
+			while (len > 1 && URL[len-1] != '/') {//找到上一级目录/
+				--len;
+			}
+			URL[len - 2] = '\0';
+		}
+		lstrcat(szFilePath, URL);
+		lstrcat(szFilePath, "/*");
+		WIN32_FIND_DATA findFileData;
+		HANDLE hListFile = FindFirstFile(szFilePath, &findFileData);
+		if (hListFile == INVALID_HANDLE_VALUE) {
+			printf("FindFirstFile error %d...\n", GetLastError());
+		}
+		while (true) {
+			contentLength += sprintf(szContent + contentLength, "<tr><td><a href='%s/%s'>%s</a></td></tr>", URL, findFileData.cFileName, findFileData.cFileName);
+			if (!FindNextFile(hListFile, &findFileData)) {
+				break;
+			}
+		}
+		contentLength += sprintf(szContent + contentLength, "</table></body></html>");
 
-	bufLen += sprintf(resHeadBuf + bufLen, "Content-Length: %d\r\n\r\n", contentLength);
-	send(s, resHeadBuf, strlen(resHeadBuf), 0);
-	send(s, szContent, contentLength, 0);
+		bufLen += sprintf(resHeadBuf + bufLen, "Content-Length: %d\r\n\r\n", contentLength);
+		send(s, resHeadBuf, strlen(resHeadBuf), 0);
+		send(s, szContent, contentLength, 0);
+	}
+	else {//文件
+		size_t len = strlen(fileType);
+		fileType[len+1] = '\0';
+		while (len > 0) {
+			fileType[len] = fileType[len-1];
+			--len;
+		}
+		fileType[0] = '.';
+		printf("fileType=%s\n", fileType);
+		bufLen = sprintf(resHeadBuf, "HTTP/1.1 200 OK\r\nContent-Type: %s; charset=gb2312\r\n", getContentType(fileType).c_str());
+
+		strcat(szFilePath, URL);
+		FILE *f = fopen(szFilePath, "r");
+		if (f == NULL) {
+			contentLength = sprintf(szContent, "<html><head><title>提示</title><meta http-equiv='Content-Type' content='text/html; charset = gb2312' /></head><body>404</body></html>");
+			bufLen += sprintf(resHeadBuf + bufLen, "Content-Length: %d\r\n\r\n", contentLength);
+
+			send(s, resHeadBuf, strlen(resHeadBuf), 0);
+			send(s, szContent, contentLength, 0);
+			return;
+		}
+		contentLength = fread(szContent, 1, MAXBUF, f);
+		bufLen += sprintf(resHeadBuf + bufLen, "Content-Length: %d\r\n\r\n", contentLength);
+
+		send(s, resHeadBuf, strlen(resHeadBuf), 0);
+		send(s, szContent, contentLength, 0);
+	}
 
 }
 
 string getContentType(const string &fileType) {
 	string contentType = "";
 
-	if (fileType == ".htm") {
-		contentType = "text/html";
-	}
-	else if (fileType == ".html") {
+	if (fileType == ".htm" || fileType == ".html") {
 		contentType = "text/html";
 	}
 	else if (fileType == ".css") {
@@ -97,6 +148,9 @@ string getContentType(const string &fileType) {
 	}
 	else if (fileType == ".gif") {
 		contentType = "image/gif";
+	}
+	else if (fileType == ".pdf") {
+		contentType = "application/pdf";
 	}
 	else if (fileType == ".ico") {
 		contentType = "image/x-icon";

@@ -4,30 +4,20 @@
 #include <stdio.h>
 #include <windows.h>
 
+#include <iostream>
+using namespace std;
+
+char fileType[16];
 int main() {
 
-	TCHAR szPath[1024] = TEXT("E:/smallinsect");
-	TCHAR szFilePath[MAX_PATH];
+	char URL[1024] = "/GameProject";
+	const char mat[] = ".";
 
-	lstrcpy(szFilePath, szPath);
-	//lstrcat(szFilePath, "/*.txt");//可以用于查找.txt结尾的文件
-	lstrcat(szFilePath, "/*");
-
-	WIN32_FIND_DATA findFileData;
-	HANDLE hListFile = FindFirstFile(szFilePath, &findFileData);
-	if (hListFile == INVALID_HANDLE_VALUE) {
-		printf("FindFirstFile error %d...\n", GetLastError());
-		system("pause");
+	char *p = strtok(URL, mat);
+	while (p) {
+		cout << p << endl;
+		p = strtok(NULL, mat);
 	}
-
-	while (true) {
-		printf("%s\n", findFileData.cFileName);
-
-		if (!FindNextFile(hListFile, &findFileData)) {
-			break;
-		}
-	}
-
 	system("pause");
 	return 0;
 }
