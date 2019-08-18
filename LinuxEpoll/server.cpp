@@ -13,23 +13,37 @@ int main(int argc, char *argv[]){
 	addrSer.sin_family = AF_INET;
 	addrSer.sin_port = htons(8080);
 //	addrSer.sin_addr.s_addr = inet_addr("127.0.0.1");
-//
-	bind(sser, (struct sockaddr *)&addrSer, sizeof(addrSer));
-
+	if(bind(sser, (struct sockaddr *)&addrSer, sizeof(addrSer)) == -1){
+		printf("bind error ...\n");
+		return -1;
+	}
+	sockaddr_in addr;
+	socklen_t addrLen = sizeof(addr);
+	if(getsockname(sser, (sockaddr *)&addr, &addrLen) == -1){
+		printf("getsockname error ...\n");
+		return -1;
+	}
+	printf("[server] ip:%s\n", inet_ntoa(addr.sin_addr));
+	printf("[server] port:%d\n", ntohs(addr.sin_port));
+	
 	listen(sser, 20);
 
 	struct sockaddr_in addrCli;
 	memset(&addrSer, 0, sizeof(addrSer));
-	socklen_t addrLen = sizeof(addrCli);
+	addrLen = sizeof(addrCli);
 	int scli = accept(sser, (struct sockaddr *)&addrCli, &addrLen);
-
+	printf("[sever] client accept success ...\n");
 	char buf[1024];
 	while(true){
-		printf(">>");
+		printf("write>>");
 		scanf("%s", buf);
 		write(scli, buf, strlen(buf)+1);
 
-		read(scli, buf, 1024);
+		printf("read<<");
+		if(read(scli, buf, 1024) == 0){
+			printf("client exit ...\n");
+			break;
+		}
 		printf("[client]: %s\n", buf);
 	}
 
