@@ -3,6 +3,8 @@ tasklist /svc | find "MyServer."
 
 查看程序端口
 netstat -ano | find "14960"
+5.查看端口是否被监听
+netstat –ntl
 
 查看远程端口是否监听
 telnet 10.0.144.59 8080
@@ -70,3 +72,49 @@ udp使用场景
                 IS_ISSET();
             }
         }
+
+
+epoll三个函数
+该函数生成一个epoll专用的文件描述符
+    int epoll_create(int size);
+        size：epoll上能关注的最大描述符数
+用于控制某个epoll文件描述符事件，可以注册、修改、删除
+    int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
+    参数
+        epfd:epoll_create生成的epoll专用描述符
+        op:
+            EPOLL_CTL_ADD--注册
+            EPOLL_CTL_MOD--修改
+            EPOLL_CTL_DEL--删除
+        fd:关联的文件描述符
+        event:告诉内核要监听什么事件
+等待IO事件发生-可以设置阻塞的函数
+    int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);
+    参数：
+        epfd:要检测的句柄
+        events:用于回传待处理事件的数组
+        maxevents:告诉内核这个events的大小
+        timeout:为超时时间
+            -1:永久阻塞
+            0:立即返回
+            >0:
+
+typedef union epoll_data{
+    void *ptr;
+    int fd;
+    uint32_t u32;
+    uint64_t u64;
+} epoll_data_t;
+struct epoll_event{
+    uint32_t events;
+    epoll_data_t data;
+};
+events:
+-EPOLLIN-读
+-EPOLLOUT-写
+-EPOLLERR-异常
+
+epoll三种工作模式
+1、水平触发模式
+2、边沿触发模式
+3、边沿费阻塞触发

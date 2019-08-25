@@ -30,5 +30,8 @@
     <ClCompile Include="05TcpClientMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="06TcpClientMain.cpp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
