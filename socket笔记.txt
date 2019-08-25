@@ -11,3 +11,62 @@ Telnet不是内部或外部命令，控制面板->程序和功能->启动或关闭windows功能->找到telne
 
 socket的bind，如果没有设置ip，自动绑定本机ip。
 
+tcp使用场景
+    对数据安全性要求高的时候
+        登录数据的传输
+        文件传输
+    http协议
+        传输层协议-tcp
+udp使用场景
+    效率高-实时性要求比较高
+        视频聊天
+        通话
+    有实力的大公司
+        使用udp
+        在应用层自定义协议，做数据校验
+
+广播
+    服务器 只发数据 广播地址 发送到固定端口
+        创建套接字-socket
+        fd绑定服务器IP和端口
+        初始化客户端ip和端口信息
+            sockaddr_in cli;
+            cli.sin_family = af_inet;
+            cli.sin_port = htons(8080);
+            inet_pton(af_net, "xxx.xxx.123.255", &cli.adr);
+        发送数据
+            sendto(fd, buf, len, 0, )
+        设置广播权限
+            setsockopt();
+    客户端 收数据
+        创建套接字
+        显示绑定ip和端口
+            bind()
+        接受数据-server数据
+            recvfrom(fd,);
+    适用范围
+        只使用局域网
+
+广播地址：xxx.xxx.123.255
+网关:xxx.xxx.123.1
+整个广播地址：255.255.255.255
+
+
+1、tcp状态转换
+2、select FD_ZERO(fd_set*); FD_SET(fd, fd_set*); FD_ISSET(fd, fd_set*); FD_CLR(fd_set*);
+    fd_set-1024
+    select(maxfd+1, &reads, &write, &expt, timeout);
+        timeout=NULL永久阻塞
+        struct timeval val = {1,0};阻塞1秒
+        reads-传入传出参数
+    思路
+        //监听
+        //将待检测的数据初始化到fd_set集合中
+        while(true){//循环的委托内核检测
+            select();
+            //判断fd是否是监听的
+            //已经连接的客户端发送来的数据
+            for(){
+                IS_ISSET();
+            }
+        }

@@ -27,5 +27,8 @@
     <ClCompile Include="04TcpServerMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="05TcpServerMain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
