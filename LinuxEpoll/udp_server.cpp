@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
 	printf("[server] ip:%s\n", inet_ntoa(saddr.sin_addr));
 	printf("[server] port:%d\n", ntohs(saddr.sin_port));
 
-	int cskt, iret;
+	int iret;
 	sockaddr_in caddr = {0};
 	socklen_t caddrLen = sizeof(caddr);
 	char buf[1024];
@@ -50,7 +50,6 @@ int main(int argc, char *argv[]){
 		
 		sendto(sskt, buf, strlen(buf)+1, 0, (sockaddr*)&caddr, caddrLen);
 	}
-
 	close(sskt);
 	return 0;
 }
