@@ -81,9 +81,13 @@ int main(int argc, char *argv[]){
 					printf("[server] recv error ...\n");
 					return -1;
 				}else if(len == 0){//客户端断开连接
-					close(fd);
 					//检测的fd从树上删除
-					epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+					ret = epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL);
+					if(ret == -1){
+						printf("[server] epoll_ctl -del error ...");
+						return -1;
+					}
+					close(fd);
 				}else{//接受数据正常
 					printf("[client] %s\n", buf);
 					//把客户端发来的数据返回给用户
