@@ -143,7 +143,7 @@
     <ClCompile Include="03TcpClientMain.cpp" />
     <ClCompile Include="04TcpClientMain.cpp" />
     <ClCompile Include="05TcpClientMain.cpp" />
-    <ClCompile Include="06TcpClientMain.cpp.cpp" />
+    <ClCompile Include="06TcpClientMain.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
