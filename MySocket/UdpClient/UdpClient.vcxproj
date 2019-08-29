@@ -130,8 +130,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="01UdpClientMain.cpp" />
-    <ClCompile Include="02UdpClientMain.cpp" />
+    <ClCompile Include="UdpClientMain.cpp" />
+    <ClCompile Include="UdpClientFunc.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="UdpClientFunc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

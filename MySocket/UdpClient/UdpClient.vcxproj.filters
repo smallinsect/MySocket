@@ -15,11 +15,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="01UdpClientMain.cpp">
+    <ClCompile Include="UdpClientFunc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="02UdpClientMain.cpp">
+    <ClCompile Include="UdpClientMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="UdpClientFunc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

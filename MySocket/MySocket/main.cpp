@@ -5,12 +5,7 @@
 
 int main() {
 
-	int n, m;
-	int ret;
-	while ((ret = scanf("%d", &n)) > 0) {
-		printf("%d %d\n", n, ret);
-	} 
-	printf("%d\n", ret);
+	int a =10;
 
 	system("pause");
 	return 0;
