@@ -44,8 +44,8 @@ struct SignResult {
 	int iResult;
 };
 
-//socket简单的服务端
-int function01() {
+//初始化
+SOCKET init(const char *IP, u_short port) {
 	WSADATA wd;
 	int ret = WSAStartup(MAKEWORD(2, 2), &wd);
 	if (ret != 0) {
@@ -54,33 +54,52 @@ int function01() {
 	}
 	cout << "WSAStartup success ..." << endl;
 
-	SOCKET _sSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (_sSocket == SOCKET_ERROR) {
+	//创建套接字
+	SOCKET skt = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (skt == INVALID_SOCKET) {
 		cout << "socket error ..." << endl;
 		return -1;
 	}
 	cout << "socket success ..." << endl;
+	//服务器信息
+	sockaddr_in addrServ;
+	addrServ.sin_family = AF_INET;
+	addrServ.sin_port = htons(port);
+	addrServ.sin_addr.s_addr = inet_addr(IP);
 
-	sockaddr_in saddr;
-	saddr.sin_family = AF_INET;
-	saddr.sin_port = htons(8000);
-	saddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-	if (bind(_sSocket, (sockaddr *)&saddr, sizeof(sockaddr_in)) == SOCKET_ERROR) {
+	//套接字绑定端口和ip
+	if (bind(skt, (sockaddr *)&addrServ, sizeof(addrServ)) == SOCKET_ERROR) {
 		cout << "bind error ..." << endl;
 		return -1;
 	}
 	cout << "bind success ..." << endl;
 
-	if (listen(_sSocket, 5) == SOCKET_ERROR) {
+	//开始监听套接字
+	if (listen(skt, SOMAXCONN) == SOCKET_ERROR) {
 		cout << "listen error ..." << endl;
 		return -1;
 	}
 	cout << "listen success ..." << endl;
 
+	return skt;
+}
+
+void destroy(SOCKET skt) {
+	closesocket(skt);
+	WSACleanup();
+}
+
+//socket简单的服务端
+int function01() {
+	SOCKET sktServ = init("0.0.0.0", 8080);
+	if (sktServ == INVALID_SOCKET) {
+		return -1;
+	}
+
 	while (true) {
 		sockaddr_in caddr;
 		int caddrlen = sizeof(sockaddr_in);
-		SOCKET _cSocket = accept(_sSocket, (sockaddr *)& caddr, &caddrlen);
+		SOCKET _cSocket = accept(sktServ, (sockaddr *)& caddr, &caddrlen);
 		if (_cSocket == SOCKET_ERROR) {
 			cout << "accept error ..." << endl;
 			return -1;
@@ -99,52 +118,23 @@ int function01() {
 		cout << "recv client msg : " << buf << endl;
 	}
 
-
 	cout << "server exit ..." << endl;
-	closesocket(_sSocket);
-	WSACleanup();
 
-	system("pause");
+	destroy(sktServ);
 	return 0;
 }
 
 //socket服务端传输结构体
 int function02() {
-	WSADATA wd;
-	int ret = WSAStartup(MAKEWORD(2, 2), &wd);
-	if (ret != 0) {
-		cout << "WSAStartup error ..." << endl;
+	SOCKET sktServ = init("0.0.0.0", 8080);
+	if (sktServ == INVALID_SOCKET) {
 		return -1;
 	}
-	cout << "WSAStartup success ..." << endl;
-
-	SOCKET _sSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (_sSocket == SOCKET_ERROR) {
-		cout << "socket error ..." << endl;
-		return -1;
-	}
-	cout << "socket success ..." << endl;
-
-	sockaddr_in saddr;
-	saddr.sin_family = AF_INET;
-	saddr.sin_port = htons(8000);
-	saddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-	if (bind(_sSocket, (sockaddr *)&saddr, sizeof(SOCKADDR_IN)) == SOCKET_ERROR) {
-		cout << "bind error ..." << endl;
-		return -1;
-	}
-	cout << "bind success ..." << endl;
-
-	if (listen(_sSocket, 5) == SOCKET_ERROR) {
-		cout << "listen error ..." << endl;
-		return -1;
-	}
-	cout << "listen success ..." << endl;
 
 	while (true) {
 		SOCKADDR_IN caddr;
 		int caddrlen = sizeof(SOCKADDR_IN);
-		SOCKET _cSocket = accept(_sSocket, (sockaddr *)& caddr, &caddrlen);
+		SOCKET _cSocket = accept(sktServ, (sockaddr *)& caddr, &caddrlen);
 		if (_cSocket == SOCKET_ERROR) {
 			cout << "accept error ..." << endl;
 			return -1;
@@ -152,7 +142,7 @@ int function02() {
 		cout << "accept success ..." << endl;
 
 		cout << "client ip : " << inet_ntoa(caddr.sin_addr) << endl;
-		cout << "client port : " << caddr.sin_port << endl;
+		cout << "client port : " << ntohs(caddr.sin_port) << endl;
 		cout << "client size : " << sizeof(caddr) << endl;
 
 		char buf[1024] = "爱白菜的小昆虫服务器收到消息了";
@@ -169,50 +159,21 @@ int function02() {
 		cout << "recv client msg szMsg : " << msg.szMsg << endl;
 	}
 
-
 	cout << "server exit ..." << endl;
-	closesocket(_sSocket);
-	WSACleanup();
 
-	system("pause");
+	destroy(sktServ);
 	return 0;
 }
 int function03() {
-	WSADATA wd;
-	int ret = WSAStartup(MAKEWORD(2, 2), &wd);
-	if (ret != 0) {
-		cout << "WSAStartup error ..." << endl;
+	SOCKET sktServ = init("0.0.0.0", 8080);
+	if (sktServ == INVALID_SOCKET) {
 		return -1;
 	}
-	cout << "WSAStartup success ..." << endl;
-
-	SOCKET _sSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (_sSocket == SOCKET_ERROR) {
-		cout << "socket error ..." << endl;
-		return -1;
-	}
-	cout << "socket success ..." << endl;
-
-	sockaddr_in saddr;
-	saddr.sin_family = AF_INET;
-	saddr.sin_port = htons(8000);
-	saddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-	if (bind(_sSocket, (sockaddr *)&saddr, sizeof(sockaddr_in)) == SOCKET_ERROR) {
-		cout << "bind error ..." << endl;
-		return -1;
-	}
-	cout << "bind success ..." << endl;
-
-	if (listen(_sSocket, 5) == SOCKET_ERROR) {
-		cout << "listen error ..." << endl;
-		return -1;
-	}
-	cout << "listen success ..." << endl;
 
 	while (true) {
 		sockaddr_in caddr;
 		int caddrlen = sizeof(sockaddr_in);
-		SOCKET _cSocket = accept(_sSocket, (sockaddr *)& caddr, &caddrlen);
+		SOCKET _cSocket = accept(sktServ, (sockaddr *)& caddr, &caddrlen);
 		if (_cSocket == SOCKET_ERROR) {
 			cout << "accept error ..." << endl;
 			return -1;
@@ -220,7 +181,7 @@ int function03() {
 		cout << "accept success ..." << endl;
 
 		cout << "client ip : " << inet_ntoa(caddr.sin_addr) << endl;
-		cout << "client port : " << caddr.sin_port << endl;
+		cout << "client port : " << ntohs(caddr.sin_port) << endl;
 		cout << "client size : " << sizeof(caddr) << endl;
 
 		char buf[1024] = "爱白菜的小昆虫服务器收到消息了";
@@ -279,52 +240,23 @@ int function03() {
 			}
 		}
 	}
-
-
 	cout << "server exit ..." << endl;
-	closesocket(_sSocket);
-	WSACleanup();
 
-	system("pause");
+	destroy(sktServ);
+	return 0;
 }
 
 //服务端与客户端的数据交互 用结构体
 int function04() {
-	WSADATA wd;
-	int ret = WSAStartup(MAKEWORD(2, 2), &wd);
-	if (ret != 0) {
-		cout << "WSAStartup error ..." << endl;
+	SOCKET sktServ = init("0.0.0.0", 8080);
+	if (sktServ == INVALID_SOCKET) {
 		return -1;
 	}
-	cout << "WSAStartup success ..." << endl;
-	
-	SOCKET _sSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (_sSocket == SOCKET_ERROR) {
-		cout << "socket error ..." << endl;
-		return -1;
-	}
-	cout << "socket success ..." << endl;
-	
-	sockaddr_in saddr;
-	saddr.sin_family = AF_INET;
-	saddr.sin_port = htons(8000);
-	saddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-	if (bind(_sSocket, (sockaddr*)& saddr, sizeof(sockaddr_in)) == SOCKET_ERROR) {
-		cout << "bind error ..." << endl;
-		return -1;
-	}
-	cout << "bind success ..." << endl;
-	
-	if (listen(_sSocket, 5) == SOCKET_ERROR) {
-		cout << "listen error ..." << endl;
-		return -1;
-	}
-	cout << "listen success ..." << endl;
 	
 	while (true) {
 		sockaddr_in caddr;
 		int caddrlen = sizeof(sockaddr_in);
-		SOCKET _cSocket = accept(_sSocket, (sockaddr*)& caddr, &caddrlen);
+		SOCKET _cSocket = accept(sktServ, (sockaddr*)& caddr, &caddrlen);
 		if (_cSocket == SOCKET_ERROR) {
 			cout << "accept error ..." << endl;
 			return -1;
@@ -332,7 +264,7 @@ int function04() {
 		cout << "accept success ..." << endl;
 	
 		cout << "client ip : " << inet_ntoa(caddr.sin_addr) << endl;
-		cout << "client port : " << caddr.sin_port << endl;
+		cout << "client port : " << ntohs(caddr.sin_port) << endl;
 		cout << "client size : " << sizeof(caddr) << endl;
 	
 		char buf[1024] = "爱白菜的小昆虫服务器收到消息了";
@@ -373,49 +305,20 @@ int function04() {
 	}
 	
 	cout << "server exit ..." << endl;
-	closesocket(_sSocket);
-	WSACleanup();
-	
-	system("pause");
+	destroy(sktServ);
 	return 0;
 }
 
 int function05() {
-	WSADATA wd;
-	int ret = WSAStartup(MAKEWORD(2, 2), &wd);
-	if (ret != 0) {
-		cout << "WSAStartup error ..." << endl;
+	SOCKET sktServ = init("0.0.0.0", 8080);
+	if (sktServ == INVALID_SOCKET) {
 		return -1;
 	}
-	cout << "WSAStartup success ..." << endl;
-
-	SOCKET _sSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (_sSocket == SOCKET_ERROR) {
-		cout << "socket error ..." << endl;
-		return -1;
-	}
-	cout << "socket success ..." << endl;
-
-	SOCKADDR_IN saddr;
-	saddr.sin_family = AF_INET;
-	saddr.sin_port = htons(8000);
-	saddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-	if (bind(_sSocket, (PSOCKADDR)& saddr, sizeof(SOCKADDR_IN)) == SOCKET_ERROR) {
-		cout << "bind error ..." << endl;
-		return -1;
-	}
-	cout << "bind success ..." << endl;
-
-	if (listen(_sSocket, 5) == SOCKET_ERROR) {
-		cout << "listen error ..." << endl;
-		return -1;
-	}
-	cout << "listen success ..." << endl;
 
 	while (true) {
 		SOCKADDR_IN caddr;
 		int caddrlen = sizeof(SOCKADDR_IN);
-		SOCKET _cSocket = accept(_sSocket, (PSOCKADDR)& caddr, &caddrlen);
+		SOCKET _cSocket = accept(sktServ, (PSOCKADDR)& caddr, &caddrlen);
 		if (_cSocket == SOCKET_ERROR) {
 			cout << "accept error ..." << endl;
 			return -1;
@@ -423,7 +326,7 @@ int function05() {
 		cout << "accept success ..." << endl;
 
 		cout << "client ip : " << inet_ntoa(caddr.sin_addr) << endl;
-		cout << "client port : " << caddr.sin_port << endl;
+		cout << "client port : " << ntohs(caddr.sin_port) << endl;
 		cout << "client size : " << sizeof(caddr) << endl;
 
 		char buf[1024] = "爱白菜的小昆虫服务器收到消息了";
@@ -434,41 +337,45 @@ int function05() {
 		cout << "recv client msg : " << buf << endl;
 	}
 
-
 	cout << "server exit ..." << endl;
-	closesocket(_sSocket);
-	WSACleanup();
 
-	system("pause");
+	destroy(sktServ);
 	return 0;
 }
+
+//接受客户端发送的命令 发送消息给客户端
 int function06() {
-	WSADATA wd;
-	WSAStartup(MAKEWORD(2, 2), &wd);
-
-	//创建服务器套接字
-	SOCKET sktSer = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-	sockaddr_in addrSer = { 0 };
-	addrSer.sin_family = AF_INET;//服务器的IPV4协议
-	addrSer.sin_port = htons(8080);//服务器的端口
-	addrSer.sin_addr.s_addr = inet_addr("127.0.0.1");//服务器的IP
-
-	//将套接字和端口、ip绑定
-	int i = bind(sktSer, (sockaddr *)&addrSer, sizeof(addrSer));
-
-	//开始监听套接字
-	listen(sktSer, 5);
-
-	//接受客户端套接字
-	SOCKET sktCli = accept(sktSer, NULL, NULL);
-	char buf[1024];
-	while (true) {
-		recv(sktCli, buf, sizeof(buf), 0);//接受客户端发送的数据
-		printf("[client] %s\n", buf);
-
-		send(sktCli, buf, strlen(buf) + 1, 0);//向客户端发送数据
+	SOCKET sktServ = init("0.0.0.0", 8080);
+	if (sktServ == INVALID_SOCKET) {
+		return -1;
 	}
 
-	WSACleanup();
+	SOCKET sktCli = accept(sktServ, NULL, NULL);
+	while (true) {
+		char szCmd[64] = {0};
+		int ret = recv(sktCli, szCmd, sizeof(szCmd), 0);
+		if (ret == SOCKET_ERROR) {
+			printf("[server] recv error ...\n");
+			break;
+		}
+		if (ret == 0) {
+			printf("[client] exit ...\n");
+			break;
+		}
+		printf("[client] %s\n", szCmd);
+		char szMsg[1024];
+		if (strcmp(szCmd, "getName") == 0) {
+			sprintf(szMsg, "%s", "爱白菜的小昆虫.");
+		}
+		else if (strcmp(szCmd, "getAge") == 0) {
+			sprintf(szMsg, "%s", "1000.");
+		}
+		else {
+			sprintf(szMsg, "%s", "???.");
+		}
+		send(sktCli, szMsg, strlen(szMsg)+1, 0);
+	}
+
+	destroy(sktServ);
+	return 0;
 }

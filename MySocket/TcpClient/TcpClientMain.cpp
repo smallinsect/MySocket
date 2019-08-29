@@ -2,6 +2,8 @@
 
 #include "TcpClientFunc.h"
 
+#include <Windows.h>
+
 int main(int argc, char *argv[]) {
 
 	//function01();
@@ -11,6 +13,7 @@ int main(int argc, char *argv[]) {
 	//function05();
 	function06();
 
+	system("pause");
 	return 0;
 }
 
