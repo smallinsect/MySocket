@@ -1,139 +1,139 @@
-�鿴���з������Ķ˿�
+查看所有服务器的端口
 tasklist /svc | find "MyServer."
 
-�鿴����˿�
+查看程序端口
 netstat -ano | find "14960"
-5.�鿴�˿��Ƿ񱻼���
-netstat �Cntl
+5.查看端口是否被监听
+netstat –ntl
 
-�鿴Զ�̶˿��Ƿ����
+查看远程端口是否监听
 telnet 10.0.144.59 8080
-telnet ip��ַ �˿ں�
-Telnet�����ڲ����ⲿ����������->����͹���->������ر�windows����->�ҵ�telnet�ͻ��ˣ����Ϲ��Ϳ����ˡ�
+telnet ip地址 端口号
+Telnet不是内部或外部命令，控制面板->程序和功能->启动或关闭windows功能->找到telnet客户端，打上勾就可以了。
 
-socket��bind�����û������ip���Զ��󶨱���ip��
+socket的bind，如果没有设置ip，自动绑定本机ip。
 
-tcpʹ�ó���
-    �����ݰ�ȫ��Ҫ��ߵ�ʱ��
-        ��¼���ݵĴ���
-        �ļ�����
-    httpЭ��
-        �����Э��-tcp
-udpʹ�ó���
-    Ч�ʸ�-ʵʱ��Ҫ��Ƚϸ�
-        ��Ƶ����
-        ͨ��
-    ��ʵ���Ĵ�˾
-        ʹ��udp
-        ��Ӧ�ò��Զ���Э�飬������У��
+tcp使用场景
+    对数据安全性要求高的时候
+        登录数据的传输
+        文件传输
+    http协议
+        传输层协议-tcp
+udp使用场景
+    效率高-实时性要求比较高
+        视频聊天
+        通话
+    有实力的大公司
+        使用udp
+        在应用层自定义协议，做数据校验
 
-�㲥
-    ������ ֻ������ �㲥��ַ ���͵��̶��˿�
-        �����׽���-socket
-        fd�󶨷�����IP�Ͷ˿�
-        ��ʼ���ͻ���ip�Ͷ˿���Ϣ
+广播
+    服务器 只发数据 广播地址 发送到固定端口
+        创建套接字-socket
+        fd绑定服务器IP和端口
+        初始化客户端ip和端口信息
             sockaddr_in cli;
             cli.sin_family = af_inet;
             cli.sin_port = htons(8080);
             inet_pton(af_net, "xxx.xxx.123.255", &cli.adr);
-        ��������
+        发送数据
             sendto(fd, buf, len, 0, (sockaddr *)&cli, sizeof(cli))
-        ���ù㲥Ȩ��
+        设置广播权限
             int flag = 1;
             setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &flag, sizeof(flag));
-    �ͻ��� ������
-        �����׽���
-        ��ʾ��ip�Ͷ˿�
+    客户端 收数据
+        创建套接字
+        显示绑定ip和端口
             bind()
-        ��������-server����
+        接受数据-server数据
             recvfrom(fd,);
-    ���÷�Χ
-        ֻʹ�þ�����
+    适用范围
+        只使用局域网
 
-�㲥��ַ��xxx.xxx.123.255
-����:xxx.xxx.123.1
-�����㲥��ַ��255.255.255.255
+广播地址：xxx.xxx.123.255
+网关:xxx.xxx.123.1
+整个广播地址：255.255.255.255
 
-�鲥
-    ʹ�÷�Χ��
-        ������
+组播
+    使用范围：
+        局域网
         internet
-    �ṹ��
+    结构体
         struct ip_mreqn{
-            //�鲥���IP��ַ
+            //组播组的IP地址
             struct in_addr imr_multiaddr;
-            //����ĳһ�����豸�ӿڵ�IP��ַ
+            //本地某一网络设备接口的IP地址
             struct in_addr imr_interface;
-            int imr_ifindex;//�������
+            int imr_ifindex;//网卡编号
         };
         struct in_addr{
             in_addr_t s_addr;
         };
     server
-        ֻ��������
-        ��Ҫʹ���鲥��ַ ���͵��ͻ��˶�Ӧ�Ķ˿���
-        �����鲥Ȩ�� setsockopt
+        只发送数据
+        需要使用组播地址 发送到客户端对应的端口上
+        添加组播权限 setsockopt
     client
-        �󶨹̶��˿�
-        ���뵽�鲥��ַ setsockopt
-�鲥��ַ
+        绑定固定端口
+        加入到组播地址 setsockopt
+组播地址
 224.0.0.0~224.0.0.255
-    Ԥ�����鲥��ַ���������ַ������ַ224.0.0.0����
-    �������䣬������ַ��·��Э��ʹ�ã�
+    预留的组播地址（永久组地址），地址224.0.0.0保留
+    不做分配，其他地址供路由协议使用；
 224.0.1.0~224.0.1.255
-    �����鲥��ַ����������Internet����ʹ�������롣
+    公用组播地址，可以用于Internet；欲使用需申请。
 224.0.2.0~238.255.255.255
-    �û����õ��鲥��ַ����ʱ���ַ����ȫ����Χ����Ч��
+    用户可用的组播地址（临时组地址），全网范围内有效；
 239.0.0.0~239.255.255.255
-    ���ع����鲥��ַ�������ض��ı��ط�Χ����Ч��
-�������˲���
-�ͻ��˲���
+    本地管理组播地址，仅在特定的本地范围内有效。
+服务器端操作
+客户端操作
 
-if_nametoindex��ȡ�������
+if_nametoindex获取网卡编号
 
-1��tcp״̬ת��
-2��select FD_ZERO(fd_set*); FD_SET(fd, fd_set*); FD_ISSET(fd, fd_set*); FD_CLR(fd_set*);
+1、tcp状态转换
+2、select FD_ZERO(fd_set*); FD_SET(fd, fd_set*); FD_ISSET(fd, fd_set*); FD_CLR(fd_set*);
     fd_set-1024
     select(maxfd+1, &reads, &write, &expt, timeout);
-        timeout=NULL��������
-        struct timeval val = {1,0};����1��
-        reads-���봫������
-    ˼·
-        //����
-        //�����������ݳ�ʼ����fd_set������
-        while(true){//ѭ����ί���ں˼��
+        timeout=NULL永久阻塞
+        struct timeval val = {1,0};阻塞1秒
+        reads-传入传出参数
+    思路
+        //监听
+        //将待检测的数据初始化到fd_set集合中
+        while(true){//循环的委托内核检测
             select();
-            //�ж�fd�Ƿ��Ǽ�����
-            //�Ѿ����ӵĿͻ��˷�����������
+            //判断fd是否是监听的
+            //已经连接的客户端发送来的数据
             for(){
                 IS_ISSET();
             }
         }
 
 
-epoll��������
-�ú�������һ��epollר�õ��ļ�������
+epoll三个函数
+该函数生成一个epoll专用的文件描述符
     int epoll_create(int size);
-        size��epoll���ܹ�ע�������������
-���ڿ���ĳ��epoll�ļ��������¼�������ע�ᡢ�޸ġ�ɾ��
+        size：epoll上能关注的最大描述符数
+用于控制某个epoll文件描述符事件，可以注册、修改、删除
     int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
-    ����
-        epfd:epoll_create���ɵ�epollר��������
+    参数
+        epfd:epoll_create生成的epoll专用描述符
         op:
-            EPOLL_CTL_ADD--ע��
-            EPOLL_CTL_MOD--�޸�
-            EPOLL_CTL_DEL--ɾ��
-        fd:�������ļ�������
-        event:�����ں�Ҫ����ʲô�¼�
-�ȴ�IO�¼�����-�������������ĺ���
+            EPOLL_CTL_ADD--注册
+            EPOLL_CTL_MOD--修改
+            EPOLL_CTL_DEL--删除
+        fd:关联的文件描述符
+        event:告诉内核要监听什么事件
+等待IO事件发生-可以设置阻塞的函数
     int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);
-    ������
-        epfd:Ҫ���ľ��
-        events:���ڻش��������¼�������
-        maxevents:�����ں����events�Ĵ�С
-        timeout:Ϊ��ʱʱ��
-            -1:��������
-            0:��������
+    参数：
+        epfd:要检测的句柄
+        events:用于回传待处理事件的数组
+        maxevents:告诉内核这个events的大小
+        timeout:为超时时间
+            -1:永久阻塞
+            0:立即返回
             >0:
 
 typedef union epoll_data{
@@ -147,13 +147,13 @@ struct epoll_event{
     epoll_data_t data;
 };
 events:
--EPOLLIN-��
--EPOLLOUT-д
--EPOLLERR-�쳣
+-EPOLLIN-读
+-EPOLLOUT-写
+-EPOLLERR-异常
 
-epoll���ֹ���ģʽ
-1��ˮƽ����ģʽ
-2�����ش���ģʽ
-3�����ط���������
+epoll三种工作模式
+1、水平触发模式
+2、边沿触发模式
+3、边沿费阻塞触发
 
 
