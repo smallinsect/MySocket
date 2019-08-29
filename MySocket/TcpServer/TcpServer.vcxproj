@@ -138,11 +138,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="01TcpServerMain.cpp" />
-    <ClCompile Include="02TcpServerMain.cpp" />
-    <ClCompile Include="03TcpServerMain.cpp" />
-    <ClCompile Include="04TcpServerMain.cpp" />
-    <ClCompile Include="05TcpServerMain.cpp" />
+    <ClCompile Include="TcpServerFunc.cpp" />
+    <ClCompile Include="TcpServerMain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TcpServerFunc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

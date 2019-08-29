@@ -1,4 +1,6 @@
-#include "TcpServerFunc.h"
+//socket客户端代码 将代码完善
+
+#include "TcpClientFunc.h"
 
 int main(int argc, char *argv[]) {
 
@@ -11,3 +13,4 @@ int main(int argc, char *argv[]) {
 
 	return 0;
 }
+

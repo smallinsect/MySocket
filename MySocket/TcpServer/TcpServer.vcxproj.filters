@@ -15,20 +15,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="01TcpServerMain.cpp">
+    <ClCompile Include="TcpServerFunc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="02TcpServerMain.cpp">
+    <ClCompile Include="TcpServerMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="03TcpServerMain.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="04TcpServerMain.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="05TcpServerMain.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TcpServerFunc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
