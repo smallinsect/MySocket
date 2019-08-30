@@ -6,3 +6,5 @@ int function03();
 int function04();
 int function05();
 int function06();
+int function07();
+int function08();
