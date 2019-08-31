@@ -35,13 +35,14 @@ SOCKET init(const char *IP, u_short port) {
 	cout << "socket success ..." << endl;
 
 	//服务端信息
-	sockaddr_in addrServ;
+	sockaddr_in addrServ = {0};
 	addrServ.sin_family = AF_INET;//IPV4协议
 	addrServ.sin_port = htons(port);//端口
 	addrServ.sin_addr.s_addr = inet_addr(IP);//IP地址
 
 	//连接服务器
 	if (connect(skt, (sockaddr *)&addrServ, sizeof(addrServ)) == SOCKET_ERROR) {
+		printf("%d\n", GetLastError());
 		cout << "connect error ..." << endl;
 		return -1;
 	}
@@ -273,19 +274,38 @@ int function04() {
 
 //socket简单的客户端代码
 int function05() {
-	SOCKET sktCli = init("192.168.3.58", 8080);
+	SOCKET sktCli = init("192.168.3.18", 8080);
 	if (sktCli == INVALID_SOCKET) {
 		return -1;
 	}
 
 	char buf[1024];
 	while (true) {
-		printf(">>");
+		printf("*************************\n");
+		printf("*getName                *\n");
+		printf("*getAge                 *\n");
+		printf("*exit                   *\n");
+		printf("*************************\n");
 		scanf("%s", buf);
-		send(sktCli, buf, strlen(buf) + 1, 0);//向服务器发送数据
-
-		recv(sktCli, buf, sizeof(buf), 0);//接受服务器发送的数据
-		printf("[server] %s\n", buf);
+		if (strcmp(buf, "exit") == 0) {
+			break;
+		}
+		int iret = send(sktCli, buf, strlen(buf) + 1, 0);
+		if (iret == SOCKET_ERROR) {
+			printf("[client] send error ...\n");
+			return -1;
+		}
+		printf("[client] %s send success ...\n", buf);
+		iret = recv(sktCli, buf, sizeof(buf), 0);
+		if (iret == SOCKET_ERROR) {
+			printf("[client] recv error ...\n");
+			return -1;
+		}
+		if (iret == 0) {
+			printf("[client] server exit ...\n");
+			return -1;
+		}
+		printf("[server] msg: %s\n", buf);
 	}
 
 	destroy(sktCli);

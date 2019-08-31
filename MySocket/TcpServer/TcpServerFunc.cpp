@@ -297,30 +297,66 @@ int function05() {
 		return -1;
 	}
 
+	fd_set fds;
+	FD_ZERO(&fds);//清空集合
+	FD_SET(sktServ, &fds);//将服务器socket放入集合
+
+	timeval tv = {0, 300};
 	while (true) {
-		SOCKADDR_IN caddr;
-		int caddrlen = sizeof(SOCKADDR_IN);
-		SOCKET _cSocket = accept(sktServ, (PSOCKADDR)& caddr, &caddrlen);
-		if (_cSocket == SOCKET_ERROR) {
-			cout << "accept error ..." << endl;
-			return -1;
+		fd_set readfds = fds;//初始化监听的集合
+		int iret = select(0, &readfds, NULL, NULL, &tv);
+		if (iret < 0) {
+			printf("[server] select error ...\n");
+			break;
 		}
-		cout << "accept success ..." << endl;
-
-		cout << "client ip : " << inet_ntoa(caddr.sin_addr) << endl;
-		cout << "client port : " << ntohs(caddr.sin_port) << endl;
-		cout << "client size : " << sizeof(caddr) << endl;
-
-		char buf[1024] = "爱白菜的小昆虫服务器收到消息了";
-		send(_cSocket, buf, strlen(buf), 0);
-
-		memset(buf, 0, sizeof(buf));
-		recv(_cSocket, buf, sizeof(buf), 0);
-		cout << "recv client msg : " << buf << endl;
+		if (iret == 0) {//集合中套接字没有响应的
+			continue;
+		}
+		for (u_int i = 0; i < readfds.fd_count; ++i) {
+			SOCKET skt = readfds.fd_array[i];
+			if (skt == sktServ) {//有新的客户端请求连接
+				sockaddr_in addr = {0};
+				int addrlen = sizeof(addr);
+				SOCKET sktCli = accept(skt, (sockaddr *)&addr, &addrlen);
+				if (sktCli == INVALID_SOCKET) {
+					printf("[server] accept error ...\n");
+					continue;
+				}
+				printf("socket:%d ip:%s port:%d join ...\n", sktCli, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+				FD_SET(sktCli, &fds);//将新连接的客户端放入集合
+				continue;
+			}
+			//客户端响应请求
+			char buf[1024] = {0};
+			iret = recv(skt, buf, sizeof(buf), 0);
+			if (iret == SOCKET_ERROR) {//接受错误
+				printf("[server] recv error ...\n");
+				FD_CLR(skt, &fds);//将客户端在集合中清除
+				closesocket(skt);//关闭客户端socket
+				continue;
+			}
+			if (iret == 0) {//客户端退出
+				printf("[client] exit ...\n");
+				FD_CLR(skt, &fds);//将客户端在集合中清除
+				closesocket(skt);//关闭客户端socket
+				continue;
+			}
+			printf("[client] msg: %s\n", buf);
+			if (strcmp(buf, "getName") == 0) {
+				sprintf(buf, "%s", "爱白菜的小昆虫.");
+			}
+			else if (strcmp(buf, "getAge") == 0) {
+				sprintf(buf, "%s", "100000.");
+			}
+			else {
+				sprintf(buf, "%s", "????.");
+			}
+			send(skt, buf, strlen(buf) + 1, 0);
+		}
 	}
 
-	cout << "server exit ..." << endl;
-
+	printf("[server] exit ...\n");
+	FD_CLR(sktServ, &fds);//清除集合中的服务器socket
 	destroy(sktServ);
 	return 0;
 }
