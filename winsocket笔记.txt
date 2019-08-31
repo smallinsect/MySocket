@@ -4,3 +4,12 @@
 报文有两个部分，包头和包体，是网络消息的基本单元
 包头：描述本次消息的大小，描述数据的作用
 包体：数据
+
+多线程
+    #include <thread>
+    void cmdThread(SOCKET skt){
+
+    }
+
+    std::thread t1(cmdThread, skt);
+

@@ -1,6 +1,7 @@
 
 
 
+getpeername(skt, (sockaddr *)&addr, &addrLen);
 //根据socket获取ip和端口 getsockname函数
 sockaddr_in addr;
 int addrLen = sizeof(addr);

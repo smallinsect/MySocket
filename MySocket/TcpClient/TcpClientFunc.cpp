@@ -62,249 +62,40 @@ int function01() {
 		return -1;
 	}
 
-	char buf[1024];
-	memset(buf, 0, sizeof(buf));
+	char buf[1024] = {0};
 	if (recv(sktCli, buf, sizeof(buf), 0) == SOCKET_ERROR) {
-		cout << "recv error ..." << endl;
+		printf("[client] recv error ...\n");
 		return -1;
 	}
-	cout << "recv success ..." << endl;
-	
-	cout << "server msg : " << buf << endl;
+	printf("[client] recv success ...\n");
+	printf("[server] msg: %s\n", buf);
 
-	cout << "input msg >>";
-	cin >> buf;
-	send(sktCli, buf, strlen(buf), 0);
+	printf("input>>");
+	scanf("%s", buf);
+	send(sktCli, buf, strlen(buf) + 1, 0);
 
 	destroy(sktCli);
 	return 0;
 }
 
-struct Message {
-	int iCmd;//指令
-	char szMsg[1024];//消息
-};
-//socket客户端传输结构体
-int function02() {
-	SOCKET sktCli = init("0.0.0.0", 8080);
-	if (sktCli == INVALID_SOCKET) {
-		return -1;
-	}
-
-	char buf[1024];
-	memset(buf, 0, sizeof(buf));
-	if (recv(sktCli, buf, sizeof(buf), 0) == SOCKET_ERROR) {
-		cout << "recv error ..." << endl;
-		return -1;
-	}
-	cout << "recv success ..." << endl;
-	
-	cout << "server msg : " << buf << endl;
-
-	cout << "input msg >>";
-	struct Message msg = {2333, "爱白菜的小昆虫是客户端"};
-	if (send(sktCli, (const char*)& msg, sizeof(msg), 0) == SOCKET_ERROR) {
-		cout << "send error ..." << endl;
-		return -1;
-	}
-	cout << "send success ..." << endl;
-
-	destroy(sktCli);
-	return 0;
-}
-
-//socket客户端 客户端与服务端的数据交互
-int function03() {
-	SOCKET sktCli = init("0.0.0.0", 8080);
-	if (sktCli == INVALID_SOCKET) {
-		return -1;
-	}
-
-	char buf[1024];
-	memset(buf, 0, sizeof(buf));
-	if (recv(sktCli, buf, sizeof(buf), 0) == SOCKET_ERROR) {
-		cout << "recv error ..." << endl;
-		return -1;
-	}
-	cout << "recv success ..." << endl;
-	
-	cout << "server msg : " << buf << endl;
-
-	while (true) {
-		cout << "input cmd >>";
-		cin >> buf;
-		char msgBuf[1024] = "";
-		if (strcmp(buf, "SignIn") == 0) {
-			if (send(sktCli, buf, sizeof(buf), 0) == SOCKET_ERROR) {
-				cout << "send error ..." << endl;
-				return -1;
-			}
-			cout << "send success ..." << endl;
-			if (recv(sktCli, msgBuf, sizeof(msgBuf), 0) == SOCKET_ERROR) {
-				cout << "recv error ..." << endl;
-			}
-			cout << "recv success ..." << endl;
-			cout << "server : " << msgBuf << endl;
-		} else if (strcmp(buf, "getName") == 0) {
-			if (send(sktCli, buf, sizeof(buf), 0) == SOCKET_ERROR) {
-				cout << "send error ..." << endl;
-				return -1;
-			}
-			if (recv(sktCli, msgBuf, sizeof(msgBuf), 0) == SOCKET_ERROR) {
-				cout << "recv error ..." << endl;
-			}
-			cout << "recv success ..." << endl;
-			cout << "server : " << msgBuf << endl;
-		} else if (strcmp(buf, "getAge") == 0) {
-			if (send(sktCli, buf, sizeof(buf), 0) == SOCKET_ERROR) {
-				cout << "send error ..." << endl;
-				return -1;
-			}
-			if (recv(sktCli, msgBuf, sizeof(msgBuf), 0) == SOCKET_ERROR) {
-				cout << "recv error ..." << endl;
-			}
-			cout << "recv success ..." << endl;
-			cout << "server : " << msgBuf << endl;
-		} else if (strcmp(buf, "SignOut") == 0) {
-			if (send(sktCli, buf, sizeof(buf), 0) == SOCKET_ERROR) {
-				cout << "send error ..." << endl;
-				return -1;
-			}
-			cout << "send success ..." << endl;
-			if (recv(sktCli, msgBuf, sizeof(msgBuf), 0) == SOCKET_ERROR) {
-				cout << "recv error ..." << endl;
-			}
-			cout << "recv success ..." << endl;
-			cout << "server : " << msgBuf << endl;
-		} else if (strcmp(buf, "Quit") == 0) {
-			if (send(sktCli, buf, sizeof(buf), 0) == SOCKET_ERROR) {
-				cout << "send error ..." << endl;
-				return -1;
-			}
-			cout << "send success ..." << endl;
-			if (recv(sktCli, msgBuf, sizeof(msgBuf), 0) == SOCKET_ERROR) {
-				cout << "recv error ..." << endl;
-			}
-			cout << "recv success ..." << endl;
-			cout << "server : " << msgBuf << endl;
-			break;
-		} else {
-			cout << "iCmd error ..." << endl;
-		}
-	}
-
-	destroy(sktCli);
-	return 0;
-}
-
-//socket客户端 客户端与服务端的数据交互 用结构体
-int function04() {
-	SOCKET sktCli = init("0.0.0.0", 8080);
-	if (sktCli == INVALID_SOCKET) {
-		return -1;
-	}
-	
-	char buf[1024];
-	memset(buf, 0, sizeof(buf));
-	if (recv(sktCli, buf, sizeof(buf), 0) == SOCKET_ERROR) {
-		cout << "recv error ..." << endl;
-		return -1;
-	}
-	cout << "recv success ..." << endl;
-	cout << "server msg : " << buf << endl;
-	
-	while (true) {
-		cout << "input cmd >>";
-		cin >> buf;
-		char msgBuf[1024] = "";
-		if (send(sktCli, buf, sizeof(buf), 0) == SOCKET_ERROR) {
-			cout << "send error ..." << endl;
-			return -1;
-		}
-		cout << "send success ..." << endl;
-		if (recv(sktCli, msgBuf, sizeof(msgBuf), 0) == SOCKET_ERROR) {
-			cout << "recv error ..." << endl;
-		}
-		cout << "recv success ..." << endl;
-		cout << "server : " << msgBuf << endl;
-	}
-
-	destroy(sktCli);
-	return 0;
-}
-
-//socket简单的客户端代码
-int function05() {
-	SOCKET sktCli = init("192.168.3.58", 8080);
-	if (sktCli == INVALID_SOCKET) {
-		return -1;
-	}
-
-	char buf[1024];
-	while (true) {
-		printf(">>");
-		scanf("%s", buf);
-		send(sktCli, buf, strlen(buf) + 1, 0);//向服务器发送数据
-
-		recv(sktCli, buf, sizeof(buf), 0);//接受服务器发送的数据
-		printf("[server] %s\n", buf);
-	}
-
-	destroy(sktCli);
-	return 0;
-}
-
-void printMenu() {
-	printf("*************************\n");
-	printf("*getName                *\n");
-	printf("*getAge                 *\n");
-	printf("*exit                   *\n");
-	printf("*************************\n");
-}
-
-//socket客户端代码 客户端发送命令 接受服务器发送的消息
-int function06() {
-	SOCKET sktCli = init("192.168.3.18", 8080);
-	if (sktCli == INVALID_SOCKET) {
-		return -1;
-	}
-
-	while (true) {
-		printMenu();
-		char szCmd[64] = {0};
-		scanf("%s", szCmd);
-		if (strcmp(szCmd, "exit") == 0) {
-			printf("[client] exit ...\n");
-			break;
-		}
-		send(sktCli, szCmd, strlen(szCmd)+1, 0);
-
-		char szRecv[1024] = {0};
-		int ret = recv(sktCli, szRecv, sizeof(szRecv), 0);
-		if (ret <= 0) {
-			printf("[client] server exit ...\n");
-			break;
-		}
-		printf("[server] msg:%s\n", szRecv);
-	}
-
-	destroy(sktCli);
-	return 0;
-}
 
 struct DataPackage {
-	int age;
-	char name[32];
+	int iAge;
+	char szName[32];
 };
 //结构化的网络消息
-int function07() {
+int function02() {
 	SOCKET sktCli = init("192.168.3.18", 8080);
 	if (sktCli == INVALID_SOCKET) {
 		return -1;
 	}
 
 	while (true) {
-		printMenu();
+		printf("*************************\n");
+		printf("*getName                *\n");
+		printf("*getAge                 *\n");
+		printf("*exit                   *\n");
+		printf("*************************\n");
 		char szCmd[64] = { 0 };
 		scanf("%s", szCmd);
 		if (strcmp(szCmd, "exit") == 0) {
@@ -320,7 +111,7 @@ int function07() {
 			break;
 		}
 		DataPackage *p = (DataPackage*)szRecv;
-		printf("[server] msg: age=%d name=%s\n", p->age, p->name);
+		printf("[server] msg: age=%d name=%s\n", p->iAge, p->szName);
 	}
 
 	destroy(sktCli);
@@ -376,7 +167,7 @@ struct LogoutResult : public DataHeader {
 	int iResult;
 };
 //客户端完善结构化消息
-int function08() {
+int function03() {
 	SOCKET sktCli = init("192.168.3.18", 8080);
 	if (sktCli == INVALID_SOCKET) {
 		return -1;
@@ -390,7 +181,7 @@ int function08() {
 			break;
 		}
 
-		DataHeader dh = {0};
+		DataHeader dh = { 0 };
 		if (strcmp(szCmd, "login") == 0) {
 			Login login;
 			strcpy(login.szName, "爱白菜的小昆虫登录");
@@ -400,7 +191,7 @@ int function08() {
 			recv(sktCli, (char *)&result, sizeof(result), 0);
 			printf("[server] cmd=%d dataLength=%d iResult=%d\n", result.cmd, result.dataLength, result.iResult);
 		}
-		else if(strcmp(szCmd, "logout") == 0){
+		else if (strcmp(szCmd, "logout") == 0) {
 			Logout logout;
 			strcpy(logout.szName, "爱白菜的小昆虫退出");
 			send(sktCli, (const char *)&logout, sizeof(logout), 0);
@@ -413,5 +204,128 @@ int function08() {
 	}
 
 	destroy(sktCli);
+	return 0;
+}
+
+//客户端写数据
+DWORD WINAPI ThreadFunc04(LPVOID params) {
+	SOCKET skt = (SOCKET)params;
+	int ret;
+	char buf[1024];
+	while (true) {
+		printf("*************************\n");
+		printf("*getName                *\n");
+		printf("*getAge                 *\n");
+		printf("*exit                   *\n");
+		printf("*************************\n");
+		scanf("%s", buf);
+		if (strcmp(buf, "exit") == 0) {
+			break;
+		}
+		ret = send(skt, buf, strlen(buf)+1, 0);
+		if (ret == SOCKET_ERROR) {
+			printf("[client] send error ...\n");
+			return -1;
+		}
+		printf("[client] %s send success ...\n", buf);
+		ret = recv(skt, buf, sizeof(buf), 0);
+		if (ret == SOCKET_ERROR) {
+			printf("[client] recv error ...\n");
+			return -1;
+		}
+		if (ret == 0) {
+			printf("[client] server exit ...\n");
+			return -1;
+		}
+		printf("[server] msg: %s\n", buf);
+	}
+	return 0;
+}
+
+//socket客户端 使用线程接受和发送消息
+int function04() {
+	SOCKET sktCli = init("192.168.3.18", 8080);
+	if (sktCli == INVALID_SOCKET) {
+		return -1;
+	}
+	
+	HANDLE hThread;
+	DWORD exitCode;
+	DWORD threadId;
+
+	hThread = CreateThread(NULL, 0, ThreadFunc04, (LPVOID)sktCli, 0, &threadId);
+	while (true) {
+		GetExitCodeThread(hThread, &exitCode);//获取执行码
+
+		if (exitCode != STILL_ACTIVE) {//线程运行完
+			break;
+		}
+		Sleep(1000);
+	}
+	CloseHandle(hThread);
+
+	printf("ReadThreadFunc04 return %d\n", exitCode);
+	printf("[client] run end ...\n");
+
+	destroy(sktCli);
+	return 0;
+}
+
+//socket简单的客户端代码
+int function05() {
+	SOCKET sktCli = init("192.168.3.58", 8080);
+	if (sktCli == INVALID_SOCKET) {
+		return -1;
+	}
+
+	char buf[1024];
+	while (true) {
+		printf(">>");
+		scanf("%s", buf);
+		send(sktCli, buf, strlen(buf) + 1, 0);//向服务器发送数据
+
+		recv(sktCli, buf, sizeof(buf), 0);//接受服务器发送的数据
+		printf("[server] %s\n", buf);
+	}
+
+	destroy(sktCli);
+	return 0;
+}
+
+//socket客户端代码 客户端发送命令 接受服务器发送的消息
+int function06() {
+	SOCKET sktCli = init("192.168.3.18", 8080);
+	if (sktCli == INVALID_SOCKET) {
+		return -1;
+	}
+
+	while (true) {
+		//printMenu();
+		char szCmd[64] = {0};
+		scanf("%s", szCmd);
+		if (strcmp(szCmd, "exit") == 0) {
+			printf("[client] exit ...\n");
+			break;
+		}
+		send(sktCli, szCmd, strlen(szCmd)+1, 0);
+
+		char szRecv[1024] = {0};
+		int ret = recv(sktCli, szRecv, sizeof(szRecv), 0);
+		if (ret <= 0) {
+			printf("[client] server exit ...\n");
+			break;
+		}
+		printf("[server] msg:%s\n", szRecv);
+	}
+
+	destroy(sktCli);
+	return 0;
+}
+
+int function07() {
+	return 0;
+}
+
+int function08() {
 	return 0;
 }
