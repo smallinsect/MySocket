@@ -21,9 +21,21 @@
     <ClCompile Include="TcpClientMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="TcpClient01.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TcpClientFunc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpClient01.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AllHeader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="define.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

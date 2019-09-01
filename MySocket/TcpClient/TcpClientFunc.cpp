@@ -1,19 +1,6 @@
 
-#define WIN32_LEAN_AND_MEAN
-#define _CRT_SECURE_NO_WARNINGS
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include <Windows.h>
-#include <WinSock2.h>
-#pragma comment(lib, "ws2_32.lib")
-
-#include <iostream>
-using namespace std;
-
+#include "define.h"
+#include "TcpClient01.h"
 #include "TcpClientFunc.h"
 
 //ip地址 端口
@@ -21,18 +8,18 @@ SOCKET init(const char *IP, u_short port) {
 	WSADATA wd;
 	int ret = WSAStartup(MAKEWORD(2, 2), &wd);
 	if (ret != 0) {
-		cout << "WSAStartup error ..." << endl;
+		printf("[client] WSAStartup error ...\n");
 		return INVALID_SOCKET;
 	}
-	cout << "WSAStartup success ..." << endl;
+	printf("[client] WSAStartup success ...\n");
 
 	//创建套接字
 	SOCKET skt = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (skt == SOCKET_ERROR) {
-		cout << "socket error ..." << endl;
+		printf("[client] socket error ...\n");
 		return INVALID_SOCKET;
 	}
-	cout << "socket success ..." << endl;
+	printf("[client] socket success ...\n");
 
 	//服务端信息
 	sockaddr_in addrServ = {0};
@@ -42,12 +29,10 @@ SOCKET init(const char *IP, u_short port) {
 
 	//连接服务器
 	if (connect(skt, (sockaddr *)&addrServ, sizeof(addrServ)) == SOCKET_ERROR) {
-		printf("%d\n", GetLastError());
-		cout << "connect error ..." << endl;
+		printf("[client] connect error ...\n");
 		return -1;
 	}
-	cout << "connect success ..." << endl;
-
+	printf("[client] connect success ...\n");
 	return skt;
 }
 
@@ -79,11 +64,6 @@ int function01() {
 	return 0;
 }
 
-
-struct DataPackage {
-	int iAge;
-	char szName[32];
-};
 //结构化的网络消息
 int function02() {
 	SOCKET sktCli = init("192.168.3.18", 8080);
@@ -119,54 +99,7 @@ int function02() {
 	return 0;
 }
 
-//交互命令
-enum CMD {
-	CMD_LOGIN,
-	CMD_LOGIN_RESULT,
-	CMD_LOGOUT,
-	CMD_LOGOUT_RESULT,
-	CMD_ERROR
-};
-//消息头
-struct DataHeader {
-	int cmd;//消息指令
-	int dataLength;//消息长度
-};
-//登录消息
-struct Login : public DataHeader {
-	Login() {
-		cmd = CMD_LOGIN;
-		dataLength = sizeof(Login);
-	}
-	char szName[64];//用户名
-	char szPass[64];//密码
-};
-//登录返回消息
-struct LoginResult : public DataHeader {
-	LoginResult() {
-		cmd = CMD_LOGIN_RESULT;
-		dataLength = sizeof(LoginResult);
-		iResult = 1;
-	}
-	int iResult;
-};
-//登出消息
-struct Logout : public DataHeader {
-	Logout() {
-		cmd = CMD_LOGOUT;
-		dataLength = sizeof(Logout);
-	}
-	char szName[64];
-};
-//登出返回消息
-struct LogoutResult : public DataHeader {
-	LogoutResult() {
-		cmd = CMD_LOGOUT_RESULT;
-		dataLength = sizeof(LogoutResult);
-		iResult = 2;
-	}
-	int iResult;
-};
+
 //客户端完善结构化消息
 int function03() {
 	SOCKET sktCli = init("192.168.3.18", 8080);
@@ -342,7 +275,12 @@ int function06() {
 	return 0;
 }
 
+//将客户端封装成类 使用
 int function07() {
+	TcpClient01 client;
+	client.connectServer("192.168.3.18", 8080);
+	client.onRun();
+
 	return 0;
 }
 

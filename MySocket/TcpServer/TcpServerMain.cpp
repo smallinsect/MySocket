@@ -8,9 +8,9 @@ int main(int argc, char *argv[]) {
 	//function02();
 	//function03();
 	//function04();
-	function05();
+	//function05();
 	//function06();
-	//function07();
+	function07();
 	//function08();
 
 	system("pause");

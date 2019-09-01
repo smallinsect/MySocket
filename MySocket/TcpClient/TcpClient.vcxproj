@@ -138,10 +138,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="TcpClient01.cpp" />
     <ClCompile Include="TcpClientMain.cpp" />
     <ClCompile Include="TcpClientFunc.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AllHeader.h" />
+    <ClInclude Include="define.h" />
+    <ClInclude Include="TcpClient01.h" />
     <ClInclude Include="TcpClientFunc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -399,6 +399,38 @@ int function06() {
 }
 
 int function07() {
+	SOCKET sktServ = init("0.0.0.0", 8080);
+	if (sktServ == INVALID_SOCKET) {
+		return -1;
+	}
+
+	SOCKET sktCli = accept(sktServ, NULL, NULL);
+	while (true) {
+		char szCmd[64] = { 0 };
+		int ret = recv(sktCli, szCmd, sizeof(szCmd), 0);
+		if (ret == SOCKET_ERROR) {
+			printf("[server] recv error ...\n");
+			break;
+		}
+		if (ret == 0) {
+			printf("[client] exit ...\n");
+			break;
+		}
+		printf("[client] %s\n", szCmd);
+		char szMsg[1024];
+		if (strcmp(szCmd, "getName") == 0) {
+			sprintf(szMsg, "%s", "°®°×²ËµÄÐ¡À¥³æ.");
+		}
+		else if (strcmp(szCmd, "getAge") == 0) {
+			sprintf(szMsg, "%s", "1000.");
+		}
+		else {
+			sprintf(szMsg, "%s", "???.");
+		}
+		send(sktCli, szMsg, strlen(szMsg) + 1, 0);
+	}
+
+	destroy(sktServ);
 	return 0;
 }
 

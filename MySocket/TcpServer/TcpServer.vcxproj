@@ -142,6 +142,8 @@
     <ClCompile Include="TcpServerMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AllHeader.h" />
+    <ClInclude Include="define.h" />
     <ClInclude Include="TcpServerFunc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
