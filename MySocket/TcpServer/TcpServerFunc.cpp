@@ -20,18 +20,18 @@ SOCKET init(const char *IP, u_short port) {
 	WSADATA wd;
 	int ret = WSAStartup(MAKEWORD(2, 2), &wd);
 	if (ret != 0) {
-		cout << "WSAStartup error ..." << endl;
+		printf("[server] WSAStartup error ...\n");
 		return -1;
 	}
-	cout << "WSAStartup success ..." << endl;
+	printf("[server] WSAStartup success ...\n");
 
 	//创建套接字
 	SOCKET skt = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (skt == INVALID_SOCKET) {
-		cout << "socket error ..." << endl;
+		printf("[server] socket error ...\n");
 		return -1;
 	}
-	cout << "socket success ..." << endl;
+	printf("[server] socket success ...\n");
 	//服务器信息
 	sockaddr_in addrServ;
 	addrServ.sin_family = AF_INET;
@@ -40,17 +40,17 @@ SOCKET init(const char *IP, u_short port) {
 
 	//套接字绑定端口和ip
 	if (bind(skt, (sockaddr *)&addrServ, sizeof(addrServ)) == SOCKET_ERROR) {
-		cout << "bind error ..." << endl;
+		printf("[server] bind error ...\n");
 		return -1;
 	}
-	cout << "bind success ..." << endl;
+	printf("[server] bind success ...\n");
 
 	//开始监听套接字
 	if (listen(skt, SOMAXCONN) == SOCKET_ERROR) {
-		cout << "listen error ..." << endl;
+		printf("[server] listen error ...\n");
 		return -1;
 	}
-	cout << "listen success ..." << endl;
+	printf("[server] listen success ...\n");
 
 	return skt;
 }

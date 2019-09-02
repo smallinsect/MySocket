@@ -21,6 +21,9 @@
     <ClCompile Include="TcpServerMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="TcpServer01.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TcpServerFunc.h">
@@ -30,6 +33,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="define.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpServer01.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
