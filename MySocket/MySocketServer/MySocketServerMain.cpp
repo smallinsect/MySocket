@@ -11,7 +11,8 @@ int main(){
 	server._start("0.0.0.0", 8000);
 
 	while (true) {
-		Sleep(1000);
+		server._work();
+		//Sleep(1000);
 	}
 
 	system("pause");
