@@ -156,4 +156,47 @@ epoll三种工作模式
 2、边沿触发模式
 3、边沿费阻塞触发
 
+本地套接字
+    1、文件格式：
+        管道：p
+        套接字：s
+        伪文件
+    2、服务器端
+        创建套接字
+            socket(AF_LOCAL, SOCK_STREAM, 0);
+        绑定-struct sockaddr_un serv
+            serv.sun_family = AF_LOCAL;
+            strcpy(serv.sun_paht, "server.socket");--现在不存在的文件
+            bind(lfd, (struct sockaddr*)&serv, len);--绑定成功套接字文件被创建
+        设置监听
+            listen();
+        等待接收连接请求
+            struct sockaddr_un client;
+            int len = sizeof(client);
+            int cfd = accept(ldf, &client, &len);
+        通信
+            send 
+            recv
+        断开连接
+            close(cfd);
+            close(lfd);
+    客户端
+        创建套接字 
+            int fd = socket(AF_LOCAL, SOCK_STREAM, 0);
+        绑定一个套接字文件
+            struct sockaddr_un client;
+            client.sun_family = AF_LOCAL;
+            strcpy(client.sun_path, "client.socket");
+            bind(fd, (struct sockaddr*)&client, len);
+        连接服务器
+            struct sockaddr_un serv
+            serv.sun_family = AF_LOCAL;
+            strcpy(serv.sun_paht, "server.socket");--现在不存在的文件
+            bind(lfd, (struct sockaddr*)&serv, len);--绑定成功套接字文件被创建
+            connect(fd, &serv, sizeof(serv));
+        通信
+            recv 
+            send 
+        关闭
+            close
 

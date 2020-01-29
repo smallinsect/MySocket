@@ -1,0 +1,22 @@
+
+
+
+Demo01TcpClient
+    简单模板客户端
+Demo01TcpServer
+    简单模板服务端
+
+Demo01UdpClient
+    简单模板客户端
+Demo01UdpServer
+    简单模板服务端
+Demo02UdpClient
+    广播接收数据
+Demo02UdpServer
+    广播发送数据
+
+
+缓冲区溢出、无法发送、网络阻塞
+
+粘包 少包
+
