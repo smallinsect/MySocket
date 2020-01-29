@@ -14,4 +14,6 @@ select模型处理多个客户端
 #MyServerFile
 用于获取本地文件路径和文件，发送给浏览器的服务器。
 
+#Web消息请求和响应的规则
+https://www.runoob.com/http/http-header-fields.html
 

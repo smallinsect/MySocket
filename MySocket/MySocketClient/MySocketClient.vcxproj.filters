@@ -18,5 +18,16 @@
     <ClCompile Include="MySocketClientMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="MySocketClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\MySocketInclude\common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MySocketClient.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
