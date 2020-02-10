@@ -10,9 +10,9 @@
 #include <WinSock2.h>
 #pragma comment(lib, "ws2_32.lib")
 
-int func(int argc, char *argv[]);
+int func(int argc, char* argv[]);
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 
 	func(argc, argv);
 
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-int func(int argc, char *argv[]) {
+int func(int argc, char* argv[]) {
 	WSADATA wd;
 	if (WSAStartup(MAKEWORD(2, 2), &wd) != 0) {
 		printf("[client] WSAStartup error ...\n");
@@ -44,7 +44,7 @@ int func(int argc, char *argv[]) {
 	addrServ.sin_addr.s_addr = inet_addr("127.0.0.1");//IP地址
 
 	//连接服务器
-	if (connect(skt, (sockaddr *)&addrServ, sizeof(addrServ)) == SOCKET_ERROR) {
+	if (connect(skt, (sockaddr*)&addrServ, sizeof(addrServ)) == SOCKET_ERROR) {
 		printf("[client] connect error ...\n");
 		return -1;
 	}

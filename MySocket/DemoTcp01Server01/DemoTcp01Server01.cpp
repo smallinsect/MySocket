@@ -10,9 +10,9 @@
 #include <WinSock2.h>
 #pragma comment(lib, "ws2_32.lib")
 
-int func(int argc, char *argv[]);
+int func(int argc, char* argv[]);
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 
 	func(argc, argv);
 
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-int func(int argc, char *argv[]) {
+int func(int argc, char* argv[]) {
 	WSADATA wd;
 	if (WSAStartup(MAKEWORD(2, 2), &wd) != 0) {
 		printf("[server] WSAStartup error ...\n");
@@ -42,7 +42,7 @@ int func(int argc, char *argv[]) {
 	addrServ.sin_addr.s_addr = inet_addr("0.0.0.0");
 
 	//套接字绑定端口和ip
-	if (bind(skt, (sockaddr *)&addrServ, sizeof(addrServ)) == SOCKET_ERROR) {
+	if (bind(skt, (sockaddr*)&addrServ, sizeof(addrServ)) == SOCKET_ERROR) {
 		printf("[server] bind error ...\n");
 		return -1;
 	}
@@ -56,9 +56,9 @@ int func(int argc, char *argv[]) {
 	printf("[server] listen success ...\n");
 
 	//客户端信息
-	sockaddr_in caddr = {0};
+	sockaddr_in caddr = { 0 };
 	int caddrlen = sizeof(sockaddr_in);
-	SOCKET cskt = accept(skt, (sockaddr *)& caddr, &caddrlen);//接受客户端连接
+	SOCKET cskt = accept(skt, (sockaddr*)&caddr, &caddrlen);//接受客户端连接
 	if (cskt == SOCKET_ERROR) {
 		printf("[server] accept error ...\n");
 		return -1;
@@ -76,7 +76,7 @@ int func(int argc, char *argv[]) {
 		}
 		printf("[server] send success ...\n");
 		//接受客户端的数据
-		if (recv(cskt, buf, sizeof(buf), 0)  <= 0) {//接受客户端发来的消息
+		if (recv(cskt, buf, sizeof(buf), 0) <= 0) {//接受客户端发来的消息
 			printf("[server] recv error ...\n");
 			return -1;
 		}
