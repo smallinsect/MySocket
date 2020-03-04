@@ -11,6 +11,7 @@
 #pragma comment(lib, "ws2_32.lib")
 
 int func(int argc, char* argv[]);
+DWORD WINAPI ThreadDo(PVOID pvParam);
 
 int main(int argc, char* argv[]) {
 
@@ -55,35 +56,47 @@ int func(int argc, char* argv[]) {
 	}
 	printf("[server] listen success ...\n");
 
-	//客户端信息
-	sockaddr_in caddr = { 0 };
-	int caddrlen = sizeof(sockaddr_in);
-	SOCKET cskt = accept(skt, (sockaddr*)&caddr, &caddrlen);//接受客户端连接
-	if (cskt == SOCKET_ERROR) {
-		printf("[server] accept error ...\n");
-		return -1;
-	}
-	printf("[server] accept success ...\n");
-	//打印连接的客户端信息
-	printf("[client] ip:%s port:%d connect ...\n", inet_ntoa(caddr.sin_addr), ntohs(caddr.sin_port));
 
 	while (true) {
-		char buf[1024] = "爱白菜的小昆虫服务器收到消息了";
-		//先发送数据给客户端
-		if (send(cskt, buf, strlen(buf) + 1, 0) == SOCKET_ERROR) {//向客户端发送消息
-			printf("[server] send error ...\n");
+		//客户端信息
+		sockaddr_in caddr = { 0 };
+		int caddrlen = sizeof(sockaddr_in);
+		SOCKET cskt = accept(skt, (sockaddr*)&caddr, &caddrlen);//接受客户端连接
+		if (cskt == SOCKET_ERROR) {
+			printf("[server] accept error ...\n");
 			return -1;
 		}
-		printf("[server] send success ...\n");
-		//接受客户端的数据
-		if (recv(cskt, buf, sizeof(buf), 0) <= 0) {//接受客户端发来的消息
-			printf("[server] recv error ...\n");
-			return -1;
-		}
-		printf("[server] recv msg:%s\n", buf);
+		printf("[server] accept success ...\n");
+		//打印连接的客户端信息
+		printf("[client] ip:%s port:%d connect ...\n", inet_ntoa(caddr.sin_addr), ntohs(caddr.sin_port));
+
+		DWORD threadId;
+		//给新连接的用户创建一个线程
+		HANDLE hThread1 = CreateThread(NULL, 0, ThreadDo, (LPVOID)cskt, 0, &threadId);
 	}
 
 	closesocket(skt);
 	WSACleanup();
 	return 0;
+}
+
+DWORD WINAPI ThreadDo(PVOID pvParam) {
+	SOCKET skt = (SOCKET)pvParam;
+	while (true) {
+		char buf[1024] = "爱白菜的小昆虫服务器收到消息了";
+		//先发送数据给客户端
+		if (send(skt, buf, strlen(buf) + 1, 0) == SOCKET_ERROR) {//向客户端发送消息
+			printf("[server] send error ...\n");
+			return -1;
+		}
+		printf("[server] send success ...\n");
+		//接受客户端的数据
+		if (recv(skt, buf, sizeof(buf), 0) <= 0) {//接受客户端发来的消息
+			printf("[server] recv error ...\n");
+			return -1;
+		}
+		printf("[server] recv msg:%s\n", buf);
+	}
+	DWORD dwResult = 0;
+	return dwResult;
 }
