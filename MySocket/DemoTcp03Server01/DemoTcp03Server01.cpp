@@ -13,6 +13,14 @@
 int func(int argc, char* argv[]);
 DWORD WINAPI ThreadDo(PVOID pvParam);
 
+struct server {
+	SOCKET skt;
+	sockaddr addr;
+};
+
+int serLen;
+server sers[100];
+
 int main(int argc, char* argv[]) {
 
 	func(argc, argv);
@@ -54,7 +62,7 @@ int func(int argc, char* argv[]) {
 		printf("[server] listen error ...\n");
 		return -1;
 	}
-	printf("[server] listen success ...\n");
+	printf("[server] listen ip:%s port:%d success ...\n", inet_ntoa(addrServ.sin_addr), ntohs(addrServ.sin_port));
 
 
 	while (true) {
@@ -97,6 +105,5 @@ DWORD WINAPI ThreadDo(PVOID pvParam) {
 		}
 		printf("[server] recv msg:%s\n", buf);
 	}
-	DWORD dwResult = 0;
-	return dwResult;
+	return 0;
 }

@@ -12,6 +12,10 @@
 
 int func(int argc, char* argv[]);
 
+DWORD WINAPI ThreadSend(PVOID pvParam);//发送消息线程
+DWORD WINAPI ThreadRecv(PVOID pvParam);//接受消息线程
+
+
 int main(int argc, char* argv[]) {
 
 	func(argc, argv);
@@ -72,5 +76,36 @@ int func(int argc, char* argv[]) {
 
 	closesocket(skt);
 	WSACleanup();
+	return 0;
+}
+
+//发送消息线程
+DWORD WINAPI ThreadSend(PVOID pvParam) {
+	SOCKET skt = (SOCKET)pvParam;
+	char msg[1024] = {};
+	while (true) {
+		scanf("%s", msg);
+		if (SOCKET_ERROR == send(skt, msg, strlen(msg), 0)) {
+			printf("[client] send error %d ...\n", GetLastError());
+			return -1;
+		}
+		printf("[client] send success ...\n");
+		Sleep(1000);//线程睡眠1秒钟
+	}
+	return 0;
+}
+
+//接受消息线程
+DWORD WINAPI ThreadRecv(PVOID pvParam) {
+	SOCKET skt = (SOCKET)pvParam;
+	char msg[1024] = {};
+	while (true) {
+		if (SOCKET_ERROR == recv(skt, msg, 1024, 0)) {
+			printf("[client] recv error %d ...\n", GetLastError());
+			return -1;
+		}
+		printf("[server] msg: %s\n", msg);
+		Sleep(1000);//线程睡眠1秒钟
+	}
 	return 0;
 }
