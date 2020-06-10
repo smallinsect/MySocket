@@ -7,11 +7,10 @@
 
 select模型处理多个客户端
 
-
-#MyServer
+# MyServer
 一个简单的web服务器
 
-#MyServerFile
+# MyServerFile
 用于获取本地文件路径和文件，发送给浏览器的服务器。
 
 #Web消息请求和响应的规则
@@ -19,7 +18,143 @@ https://www.runoob.com/http/http-header-fields.html
 
 
 
-<<<<<<< HEAD
+# Winsock
+
+套接字信息
+
+	sockaddr_in saddr = {0};//定义套接字地址结构变量
+	saddr.sin_family = AF_INET;//制定地址家族为TCP/IP
+	saddr.sin_port = htons(80);//制定端口号
+	saddr.sin_addr.s_addr = inet_addr("0.0.0.0");//将字符串IP转换为网络字节顺序排列的IP
+字节转换函数
+
+```
+
+```
+
+Windows套接字
+
+```
+CSocket::CSocket();
+1.创建套接字
+CSocket *sock = new CSocket();
+2.绑定地址信息
+BOOL Bind(const SOCKADDR *lpSockAddr, int nSockAddrLen);
+
+sock.Bind((SOCKADDR*)addr, sizeof(addr));
+3.监听客户端的连接请求
+BOOL Listen(int nConnectionBacklog = 5);// 5表示只能监听5个套接字发送请求
+
+4.连接服务器
+BOOL Connect(const SOCKADDR* lpSockAddr, int nSockAddrLen);
+5.数据交换
+//发送数据
+virtual int Send(const void* lpBuf, int nBufLen, int nFlags = 0);
+//接受数据
+virtual int Receive(void* lpBuf, int nBufLen, int nFlags = 0);
+6.关闭套接字对象
+virtual void Close();
+```
+
+需要配置
+
+```
+创建VC应用程序时，需要指定Windows Socket，否则必须手动添加该类头文件afxsock.h。
+```
+
+引入动态库
+
+```
+WS2_32.DLL
+
+WSADATA wd;
+WSAStartup(MAKEWORD(2, 2), &wd)
+```
+
+
+
+```
+客户端
+```
+
+
+
+UDP传输
+
+```
+//发送函数
+int sendto(
+	SOCKET s,//套接字句柄
+	const char FAR* buf,//数据缓冲
+	int len,//数据的长度
+	int flags,//一般设置为0
+	const struct sockaddr FAR* to,//目标地址结构信息
+	int tolen//目标地址结构大小
+);
+//接受函数
+int recvfrom(
+	SOCKET s,
+	char FAR* buf,
+	int len,
+	int flags,
+	struct sockaddr FAR* from,
+	int FAR* fromlen
+);
+```
+
+将套接字设为异步模式
+
+```
+s = ::socket(AF_INET, SOCK_STREAM, 0);
+::WSAAsyncSelect(s, this->m_hWnd, WM_SOCKET, FD_READ);
+```
+
+MFC函数使用
+
+```
+GetDlgItem(IDC_TEXT)->EndbleWindow(false);//禁用消息显示框
+GetDlgItem(IDC_SENDTEXT)->EndbleWindow(false);//禁用发送消息编辑框
+GetDlgItem(IDC_SEND)->EndbleWindow(false);//禁用发送消息按钮
+```
+
+获取控件信息
+
+```
+CString str, str1;
+int port;
+GetDlgItem(IDC_ADDR)->GetWindowText(str);//获取服务器地址
+GetDlgItem(IDC_PORT)->GetWindowText(str);//获取端口号
+
+port = atoi(str1.GetBuffer(1));//将端口字符转换整数
+//赋值
+addr.sin_family = AF_INET;
+addr.sin_addr.s_addr = inet_addr(str.GetBuffer(1));
+addr.sin_port = ntohs(port);
+
+```
+
+给控件设置
+
+```
+GetDlgItem(IDC_TEXT)->SetWindowText(str);//控件赋值
+```
+
+服务器
+
+```
+::bind(s, (sockaddr*)&addr, sizeof(addr));
+::WSAAsyncSelect(s, this->m_hWnd, WM_SOCKET, FD_ACCEPT|FD_READ);
+::listen(s, 5);
+```
+
+
+
+
+
+
+
+
+
 DemoTcp01Client01 简单模板客户端
 DemoTcp01Client02
 
@@ -51,8 +186,8 @@ Demo02UdpServer
 链路层
     处理与电缆
 
+```
 getpeername(skt, (sockaddr *)&addr, &addrLen);
-//鏍规嵁socket鑾峰彇ip鍜岀��鍙� getsockname鍑芥暟
 sockaddr_in addr;
 int addrLen = sizeof(addr);
 if (getsockname(s, (sockaddr *)&addr, &addrLen) != 0) {
@@ -62,8 +197,6 @@ if (getsockname(s, (sockaddr *)&addr, &addrLen) != 0) {
 printf("[server] getsockname success ...\n");
 printf("ip: %s\n", inet_ntoa(addr.sin_addr));
 printf("port: %d\n", ntohs(addr.sin_port));
-
-//鑾峰彇鏈�鏈篿p鍜屽崗璁� getaddrinfo
 addrinfo hints, *result = NULL;
 ZeroMemory(&hints, sizeof(hints));
 hints.ai_family = AF_INET;
@@ -79,7 +212,6 @@ if (iResult != 0) {
 }
 printf("[server] getaddrinfo success ...\n");
 
-//鍒涘缓濂楁帴瀛�
 SOCKET sockServer = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 if (sockServer == INVALID_SOCKET) {
     printf("[server] socket error ...\n");
@@ -89,7 +221,6 @@ if (sockServer == INVALID_SOCKET) {
 }
 cout << "[server] socket success ...\n";
 
-//濂楁帴瀛楃粦瀹氬崗璁�銆佺��鍙ｃ€両P鍦板潃
 if (bind(sockServer,  result->ai_addr,  result->ai_addrlen) == SOCKET_ERROR) {
     printf("[server] bind error ...\n");
     freeaddrinfo(result);
@@ -98,10 +229,8 @@ if (bind(sockServer,  result->ai_addr,  result->ai_addrlen) == SOCKET_ERROR) {
 }
 cout << "[server] bind success ...\n";
 
-freeaddrinfo(result);//閲婃斁璧勬簮
+freeaddrinfo(result);
 
-//鏅�閫氭柟娉曞垱寤烘湇鍔＄��
-//鍒涘缓濂楁帴瀛�
 SOCKET sockServer = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 if (sockServer == INVALID_SOCKET) {
     cout << "[server] socket error ...\n";
@@ -111,17 +240,17 @@ if (sockServer == INVALID_SOCKET) {
 cout << "[server] socket success ...\n";
 
 sockaddr_in saddrServer = {0};
-saddrServer.sin_family = AF_INET;//鍗忚�甀PV4
-saddrServer.sin_port = htons(8080);//绔�鍙�8080
-//saddrServer.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");//IP鍦板潃127.0.0.1
+saddrServer.sin_family = AF_INET;
+saddrServer.sin_port = htons(8080);
+//saddrServer.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
 
-//濂楁帴瀛楃粦瀹氬崗璁�銆佺��鍙ｃ€両P鍦板潃
 if (bind(sockServer, (sockaddr *)&saddrServer, sizeof(sockaddr_in)) == SOCKET_ERROR) {
     cout << "[server] bind error ...\n";
     system("pause");
     return -1;
 }
 cout << "[server] bind success ...\n";
+```
 
 查看所有服务器的端口
 tasklist /svc | find "MyServer."
@@ -323,6 +452,7 @@ epoll三种工作模式
             recv 
             send 
         关闭
+
             close
 =======
 ## Linux的Tcp修改缓存
