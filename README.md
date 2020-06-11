@@ -7,6 +7,15 @@
 
 select模型处理多个客户端
 
+
+
+# VS项目配置路径
+
+1. 输出目录
+   * $(SolutionDir)../bin/$(Platform)/$(Configuration)/
+2. 中检目录
+   * $(SolutionDir)../bintemp/$(Platform)/$(ProjectName)/$(Configuration)/
+
 # MyServer
 一个简单的web服务器
 
@@ -568,5 +577,5 @@ net.ipv4.tcp_mem = 6177504 8236672 16777216
 net.ipv4.tcp_rmem = 4096 873800 16777216
 net.ipv4.tcp_wmem = 4096 873800 16777216
 ```
->>>>>>> 6cc589b471d0bc01e7474f50e6d940b86ee1f341
+
 
