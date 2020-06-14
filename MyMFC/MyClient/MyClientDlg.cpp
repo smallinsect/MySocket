@@ -12,6 +12,7 @@
 #define new DEBUG_NEW
 #endif
 
+#define WM_SOCKET WM_USER+100//自定义消息
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -65,6 +66,11 @@ BEGIN_MESSAGE_MAP(CMyClientDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDC_CLOSE, &CMyClientDlg::OnBnClickedClose)
+	ON_BN_CLICKED(IDC_SEND, &CMyClientDlg::OnBnClickedSend)
+	ON_BN_CLICKED(IDC_CONNECT, &CMyClientDlg::OnBnClickedConnect)
+	ON_BN_CLICKED(IDC_DISCON, &CMyClientDlg::OnBnClickedDiscon)
+	ON_MESSAGE(WM_SOCKET, &CMyClientDlg::OnSocket)
 END_MESSAGE_MAP()
 
 
@@ -100,7 +106,14 @@ BOOL CMyClientDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	GetDlgItem(IDC_CLOSE)->EnableWindow(false);
+	GetDlgItem(IDC_SEND)->EnableWindow(false);
+	GetDlgItem(IDC_DISCON)->EnableWindow(false);
 
+	// 创建套接字
+	s = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	// 将IDC_EDIT_MSG控件设为读取socket消息。
+	::WSAAsyncSelect(s, this->m_hWnd, WM_SOCKET, FD_READ);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -153,3 +166,70 @@ HCURSOR CMyClientDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+void CMyClientDlg::OnBnClickedClose()
+{
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void CMyClientDlg::OnBnClickedSend()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString str1;
+	GetDlgItem(IDC_EDIT_SEND)->GetWindowText(str1);
+	send(s, (const char*)str1.GetBuffer(1), 0);
+}
+
+
+void CMyClientDlg::OnBnClickedConnect()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString str1, str2;
+	GetDlgItem(IDC_EDIT_IP)->GetWindowText(str1);
+	GetDlgItem(IDC_EDIT_PORT)->GetWindowText(str2);
+	if (str1 == "" || str2 == "") {
+		MessageBox(TEXT("服务器地址和端口不能为NULL"));
+		return;
+	}
+	int port = atoi((const char *)str2.GetBuffer(1));
+	addr.sin_family = AF_INET;
+	addr.sin_port = ntohs(port);
+	addr.sin_addr.s_addr = inet_addr((const char *)str1.GetBuffer(1));
+
+	GetDlgItem(IDC_EDIT_MSG)->SetWindowText(TEXT("正在连接服务器...\r\n"));
+	if (!::connect(s, (PSOCKADDR)&addr, sizeof(addr))) {
+		GetDlgItem(IDC_EDIT_MSG)->GetWindowText(str1);
+		str1 += "服务器连接成功...\r\n";
+		GetDlgItem(IDC_EDIT_MSG)->SetWindowText(str1);
+
+
+	}
+	else {
+		GetDlgItem(IDC_EDIT_MSG)->GetWindowText(str1);
+		str1 += "服务器连接失败...请重新连接...\r\n";
+		GetDlgItem(IDC_EDIT_MSG)->SetWindowText(str1);
+	}
+}
+
+
+void CMyClientDlg::OnBnClickedDiscon()
+{
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+afx_msg LRESULT CMyClientDlg::OnSocket(WPARAM wParam, LPARAM lParam)
+{
+	if (lParam == FD_READ) {
+		char cs[1024] = "";
+		recv(s, cs, 1024, 0);
+		CString str;
+		GetDlgItem(IDC_EDIT_MSG)->GetWindowText(str);
+		str += "\r\n服务器说：";
+		str += (LPTSTR)cs; 
+		GetDlgItem(IDC_EDIT_MSG)->SetWindowText(str);
+	}
+	return 0;
+}

@@ -19,7 +19,9 @@ public:
 
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
-
+private:
+	SOCKET s;
+	SOCKADDR_IN addr;
 
 // 实现
 protected:
@@ -31,4 +33,11 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnBnClickedClose();
+	afx_msg void OnBnClickedSend();
+	afx_msg void OnBnClickedConnect();
+	afx_msg void OnBnClickedDiscon();
+protected:
+	afx_msg LRESULT OnSocket(WPARAM wParam, LPARAM lParam);
 };

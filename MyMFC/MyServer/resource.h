@@ -14,7 +14,6 @@
 #define IDC_EDIT_IP                     1006
 #define IDC_EDIT_PORT                   1007
 #define IDC_START                       1008
-#define IDC_BUTTON4                     1009
 #define IDC_STOP                        1009
 
 // Next default values for new objects

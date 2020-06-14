@@ -14,7 +14,6 @@
 #define IDC_EDIT_IP                     1004
 #define IDC_EDIT_PORT                   1005
 #define IDC_CONNECT                     1006
-#define IDC_BREAK                       1007
 #define IDC_DISCON                      1007
 
 // Next default values for new objects

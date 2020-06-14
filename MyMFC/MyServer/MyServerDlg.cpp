@@ -65,6 +65,8 @@ BEGIN_MESSAGE_MAP(CMyServerDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDC_CLOSE, &CMyServerDlg::OnBnClickedClose)
+	ON_BN_CLICKED(IDC_SEND, &CMyServerDlg::OnBnClickedSend)
 END_MESSAGE_MAP()
 
 
@@ -153,3 +155,20 @@ HCURSOR CMyServerDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+void CMyServerDlg::OnBnClickedClose()
+{
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void CMyServerDlg::OnBnClickedSend()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString strSend;
+	GetDlgItemText(IDC_EDIT_SEND, strSend);
+	SetDlgItemText(IDC_EDIT_MSG, strSend);
+	
+	AfxMessageBox(strSend);
+}
