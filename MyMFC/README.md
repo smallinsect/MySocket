@@ -1,5 +1,17 @@
 # MyMFC
 
+## windows命令
+
+查看程序使用的端口，查看8888端口
+
+```
+netstat -aon|findstr "8888"
+```
+
+
+
+
+
 ## MyServer
 
 创建模态窗口服务器
