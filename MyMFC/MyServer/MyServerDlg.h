@@ -20,6 +20,14 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 
+private:
+	SOCKET s;//服务器的套接字
+	SOCKADDR_IN addr;//服务器信息
+
+	SOCKET s1;//客户端的套接字
+	SOCKADDR_IN addr1;//客户端信息
+
+	int n;
 
 // 实现
 protected:
@@ -32,6 +40,7 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void OnBnClickedClose();
 	afx_msg void OnBnClickedSend();
+protected:
+	afx_msg LRESULT OnSocket(WPARAM wParam, LPARAM lParam);
 };

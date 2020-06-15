@@ -12,6 +12,7 @@
 #define new DEBUG_NEW
 #endif
 
+#define WM_SOCKET WM_USER+100
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -65,8 +66,8 @@ BEGIN_MESSAGE_MAP(CMyServerDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDC_CLOSE, &CMyServerDlg::OnBnClickedClose)
 	ON_BN_CLICKED(IDC_SEND, &CMyServerDlg::OnBnClickedSend)
+	ON_MESSAGE(WM_SOCKET, &CMyServerDlg::OnSocket)
 END_MESSAGE_MAP()
 
 
@@ -102,7 +103,33 @@ BOOL CMyServerDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	WSADATA wd;
+	::WSAStartup(MAKEWORD(2, 2), &wd);
 
+	// 创建套接字
+	s = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (s == INVALID_SOCKET) {
+		n = ::WSAGetLastError();
+	}
+	// 初始化信息
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(8888);
+	//addr.sin_addr.s_addr = inet_addr("0.0.0.0"); 
+	addr.sin_addr.s_addr = INADDR_ANY;
+	// 绑定信息
+	if (::bind(s, (PSOCKADDR)&addr, sizeof(addr)) == SOCKET_ERROR) {
+		n = ::WSAGetLastError();
+	}
+	// 监听服务器套接字
+	if (::listen(s, 5) == SOCKET_ERROR) {
+		n = ::WSAGetLastError();
+	}
+	// 将服务端的socket设为异步
+	::WSAAsyncSelect(s, this->m_hWnd, WM_SOCKET, FD_ACCEPT | FD_READ);
+
+	GetDlgItem(IDC_EDIT_MSG)->SetWindowText(TEXT("服务器开启成功"));
+
+	n = 0;
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -155,20 +182,44 @@ HCURSOR CMyServerDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-
-
-void CMyServerDlg::OnBnClickedClose()
-{
-	// TODO: 在此添加控件通知处理程序代码
-}
-
-
 void CMyServerDlg::OnBnClickedSend()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	CString strSend;
-	GetDlgItemText(IDC_EDIT_SEND, strSend);
-	SetDlgItemText(IDC_EDIT_MSG, strSend);
+	CString str;
+	GetDlgItemText(IDC_EDIT_SEND, str);
 	
-	AfxMessageBox(strSend);
+	::send(s1, (const char *)str.GetBuffer(), str.GetLength(), 0);
+
+	GetDlgItemText(IDC_EDIT_MSG, str);
+	str += "发送成功...";
+	SetDlgItemText(IDC_EDIT_MSG, str);
+	AfxMessageBox(str);
+}
+
+
+afx_msg LRESULT CMyServerDlg::OnSocket(WPARAM wParam, LPARAM lParam)
+{
+	CString str;
+	char cs[1024] = "";
+	switch (lParam) {
+	case FD_ACCEPT:
+	{
+		int addrlen = sizeof(addr1);
+		s1 = ::accept(s, (PSOCKADDR)&addr1, &addrlen);
+		n = n + 1;
+		str.Format(TEXT("有%d个客户端连接... %s:%d\r\n"), 
+			n, ::inet_ntoa(addr1.sin_addr), ::ntohs(addr1.sin_port));
+		GetDlgItem(IDC_EDIT_MSG)->SetWindowText(str);
+		break;
+	}
+	case FD_READ:
+	{
+		::recv(s1, cs, 1024, 0);
+		GetDlgItem(IDC_EDIT_MSG)->GetWindowText(str);
+		str += cs;
+		GetDlgItem(IDC_EDIT_MSG)->SetWindowText(str);
+		break;
+	}
+	}
+	return 0;
 }

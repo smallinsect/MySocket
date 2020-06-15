@@ -106,14 +106,15 @@ BOOL CMyClientDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	WSADATA wd;
+	::WSAStartup(MAKEWORD(2, 2), &wd);
+
 	GetDlgItem(IDC_CLOSE)->EnableWindow(false);
 	GetDlgItem(IDC_SEND)->EnableWindow(false);
 	GetDlgItem(IDC_DISCON)->EnableWindow(false);
 
 	// 创建套接字
 	s = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	// 将IDC_EDIT_MSG控件设为读取socket消息。
-	::WSAAsyncSelect(s, this->m_hWnd, WM_SOCKET, FD_READ);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -179,7 +180,7 @@ void CMyClientDlg::OnBnClickedSend()
 	// TODO: 在此添加控件通知处理程序代码
 	CString str1;
 	GetDlgItem(IDC_EDIT_SEND)->GetWindowText(str1);
-	send(s, (const char*)str1.GetBuffer(1), 0);
+	send(s, (const char*)str1.GetBuffer(1), str1.GetLength(), 0);
 }
 
 
@@ -195,20 +196,22 @@ void CMyClientDlg::OnBnClickedConnect()
 	}
 	int port = atoi((const char *)str2.GetBuffer(1));
 	addr.sin_family = AF_INET;
-	addr.sin_port = ntohs(port);
-	addr.sin_addr.s_addr = inet_addr((const char *)str1.GetBuffer(1));
+	addr.sin_port = htons(8888);
+	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	GetDlgItem(IDC_EDIT_MSG)->SetWindowText(TEXT("正在连接服务器...\r\n"));
-	if (!::connect(s, (PSOCKADDR)&addr, sizeof(addr))) {
-		GetDlgItem(IDC_EDIT_MSG)->GetWindowText(str1);
-		str1 += "服务器连接成功...\r\n";
-		GetDlgItem(IDC_EDIT_MSG)->SetWindowText(str1);
-
-
-	}
-	else {
+	if (::connect(s, (PSOCKADDR)&addr, sizeof(addr)) == SOCKET_ERROR) {
+		int n = ::WSAGetLastError();
 		GetDlgItem(IDC_EDIT_MSG)->GetWindowText(str1);
 		str1 += "服务器连接失败...请重新连接...\r\n";
+		GetDlgItem(IDC_EDIT_MSG)->SetWindowText(str1);
+	}
+	else {
+		// 将IDC_EDIT_MSG控件设为读取socket消息。
+		::WSAAsyncSelect(s, this->m_hWnd, WM_SOCKET, FD_READ);
+		int n = ::WSAGetLastError();
+		GetDlgItem(IDC_EDIT_MSG)->GetWindowText(str1);
+		str1 += "服务器连接成功...\r\n";
 		GetDlgItem(IDC_EDIT_MSG)->SetWindowText(str1);
 	}
 }
