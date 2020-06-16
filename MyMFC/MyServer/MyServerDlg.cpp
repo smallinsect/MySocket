@@ -187,13 +187,16 @@ void CMyServerDlg::OnBnClickedSend()
 	// TODO: 在此添加控件通知处理程序代码
 	CString str;
 	GetDlgItemText(IDC_EDIT_SEND, str);
+	char sz1[1024];
+	DWORD dwNum = WideCharToMultiByte(CP_OEMCP, NULL, str.GetBuffer(0), -1, NULL, NULL, 0, NULL);
+	memset(sz1, 0, sizeof(sz1));
+	WideCharToMultiByte(CP_OEMCP, NULL, str.GetBuffer(0), -1, sz1, dwNum, 0, NULL);
 	
-	::send(s1, (const char *)str.GetBuffer(), str.GetLength(), 0);
+	::send(s1, sz1, strlen(sz1)+1, 0);
 
 	GetDlgItemText(IDC_EDIT_MSG, str);
-	str += "发送成功...";
+	str += "发送成功...\r\n";
 	SetDlgItemText(IDC_EDIT_MSG, str);
-	AfxMessageBox(str);
 }
 
 
@@ -208,7 +211,7 @@ afx_msg LRESULT CMyServerDlg::OnSocket(WPARAM wParam, LPARAM lParam)
 		s1 = ::accept(s, (PSOCKADDR)&addr1, &addrlen);
 		n = n + 1;
 		str.Format(TEXT("有%d个客户端连接... %s:%d\r\n"), 
-			n, ::inet_ntoa(addr1.sin_addr), ::ntohs(addr1.sin_port));
+			n, CString(::inet_ntoa(addr1.sin_addr)), ::ntohs(addr1.sin_port));
 		GetDlgItem(IDC_EDIT_MSG)->SetWindowText(str);
 		break;
 	}
@@ -216,7 +219,9 @@ afx_msg LRESULT CMyServerDlg::OnSocket(WPARAM wParam, LPARAM lParam)
 	{
 		::recv(s1, cs, 1024, 0);
 		GetDlgItem(IDC_EDIT_MSG)->GetWindowText(str);
-		str += cs;
+		str += "客户端：";
+		str += CString(cs);
+		str += "\r\n";
 		GetDlgItem(IDC_EDIT_MSG)->SetWindowText(str);
 		break;
 	}

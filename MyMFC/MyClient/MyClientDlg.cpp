@@ -109,9 +109,9 @@ BOOL CMyClientDlg::OnInitDialog()
 	WSADATA wd;
 	::WSAStartup(MAKEWORD(2, 2), &wd);
 
-	GetDlgItem(IDC_CLOSE)->EnableWindow(false);
-	GetDlgItem(IDC_SEND)->EnableWindow(false);
-	GetDlgItem(IDC_DISCON)->EnableWindow(false);
+	//GetDlgItem(IDC_CLOSE)->EnableWindow(false);
+	//GetDlgItem(IDC_SEND)->EnableWindow(false);
+	//GetDlgItem(IDC_DISCON)->EnableWindow(false);
 
 	// 创建套接字
 	s = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -180,7 +180,12 @@ void CMyClientDlg::OnBnClickedSend()
 	// TODO: 在此添加控件通知处理程序代码
 	CString str1;
 	GetDlgItem(IDC_EDIT_SEND)->GetWindowText(str1);
-	send(s, (const char*)str1.GetBuffer(1), str1.GetLength(), 0);
+	char sz1[1024];
+	DWORD dwNum = WideCharToMultiByte(CP_OEMCP, NULL, str1.GetBuffer(0), -1, NULL, NULL, 0, NULL);
+	memset(sz1, 0, sizeof(sz1));
+	WideCharToMultiByte(CP_OEMCP, NULL, str1.GetBuffer(0), -1, sz1, dwNum, 0, NULL);
+
+	send(s, sz1, strlen(sz1)+1, 0);
 }
 
 
@@ -191,13 +196,24 @@ void CMyClientDlg::OnBnClickedConnect()
 	GetDlgItem(IDC_EDIT_IP)->GetWindowText(str1);
 	GetDlgItem(IDC_EDIT_PORT)->GetWindowText(str2);
 	if (str1 == "" || str2 == "") {
-		MessageBox(TEXT("服务器地址和端口不能为NULL"));
-		return;
+		str1 = "127.0.0.1";
+		str2 = "8888";
 	}
-	int port = atoi((const char *)str2.GetBuffer(1));
+	char sz1[1024];
+	char sz2[1024];
+
+	DWORD dwNum = WideCharToMultiByte(CP_OEMCP, NULL, str1.GetBuffer(0), -1, NULL, NULL, 0, NULL);
+	memset(sz1, 0, sizeof(sz1));
+	WideCharToMultiByte(CP_OEMCP, NULL, str1.GetBuffer(0), -1, sz1, dwNum, 0, NULL);
+
+	dwNum = WideCharToMultiByte(CP_OEMCP, NULL, str2.GetBuffer(0), -1, NULL, NULL, 0, NULL);
+	memset(sz2, 0, sizeof(sz2));
+	WideCharToMultiByte(CP_OEMCP, NULL, str2.GetBuffer(0), -1, sz2, dwNum, 0, NULL);
+
+	int port = atoi(sz2);
 	addr.sin_family = AF_INET;
-	addr.sin_port = htons(8888);
-	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addr.sin_port = htons(port);
+	addr.sin_addr.s_addr = inet_addr(sz1);
 
 	GetDlgItem(IDC_EDIT_MSG)->SetWindowText(TEXT("正在连接服务器...\r\n"));
 	if (::connect(s, (PSOCKADDR)&addr, sizeof(addr)) == SOCKET_ERROR) {
@@ -225,14 +241,18 @@ void CMyClientDlg::OnBnClickedDiscon()
 
 afx_msg LRESULT CMyClientDlg::OnSocket(WPARAM wParam, LPARAM lParam)
 {
-	if (lParam == FD_READ) {
+	switch (lParam) {
+	case FD_READ:
+	{
 		char cs[1024] = "";
 		recv(s, cs, 1024, 0);
-		CString str;
+		CString str, str1(cs);
 		GetDlgItem(IDC_EDIT_MSG)->GetWindowText(str);
 		str += "\r\n服务器说：";
-		str += (LPTSTR)cs; 
+		str += str1;
 		GetDlgItem(IDC_EDIT_MSG)->SetWindowText(str);
+		break;
+	}
 	}
 	return 0;
 }
