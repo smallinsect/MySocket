@@ -302,5 +302,68 @@ char szBuff[50] = { 0 };
 CString str(szBuff);  
 ```
 
+## 多线程
+
+创建多线程
+
+```
+HANDLE CreateThread(
+    LPSECURITY_ATTRIBUTES lpThreadAttributes,//SD
+    SIZE_T dwStackSize,//initialstacksize
+    LPTHREAD_START_ROUTINE lpStartAddress,//线程调用的函数
+    LPVOID lpParameter,//调用函数的参数
+    DWORD dwCreationFlags,//creationoption
+    LPDWORD lpThreadId//threadidentifier
+)
+```
+
+实例
+
+```
+DOWRD WINAPI myfun1(LPVOID lpParameter);//声明线程函数
+
+HANDLE h1 = ::CreateThread(NULL, 0, myfun1, NULL, 0, NULL);
+
+::CloseHandle(h1);
+while(1){
+	
+}
+
+DOWRD WINAPI myfun1(LPVOID lpParameter){
+	printf("线程1正在运行！");
+	return 0;
+}
+```
+
+## FTP客户端
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
