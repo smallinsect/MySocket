@@ -41,7 +41,7 @@ int MyServer::Start(const char* ip, u_short port) {//开始服务器
 	cout << "[server] listen success ..." << endl;
 
 	FD_ZERO(&m_fds);//初始化
-	FD_SET(m_skt, &m_fds);//服务socket放入集合
+	FD_SET(m_skt,&m_fds);//服务socket放入集合
 
 	m_bExit = false;
 	// 创建线程
