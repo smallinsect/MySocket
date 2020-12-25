@@ -13,7 +13,7 @@ int main(){
 
     sockaddr_in addr;
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(6000);
+    addr.sin_port = htons(8888);
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     SOCKET client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -24,24 +24,26 @@ int main(){
         return -1;
     }
     while (1) {
-        cout << "sent hello!!!!" << endl;
-        char buffer[1024];
+        char buffer[1024] = "";
+        cout << "input>>";
         cin >> buffer;
         //strcpy(buffer, "hello");
-        send(client, buffer, 1024, 0);
+        send(client, buffer, strlen(buffer)+1, 0);
 
         memset(buffer, 0, sizeof(buffer));
 
-        cout << "recv: " << endl;
-        int rev = recv(client, buffer, 1024, 0);
-        if (rev == 0)
-            cout << "recv nothing!" << endl;
+        cout << "[服务器]";
+        if (recv(client, buffer, 1024, 0) <= 0) {
+            cout << "服务器断开连接..." << endl;
+            break;
+        }
         cout << buffer << endl;
-        Sleep(1000);
+        //Sleep(1000);
     }
 
     closesocket(client);
     WSACleanup();
 
+    system("pause");
     return 0;
 }
