@@ -32,7 +32,6 @@ typedef struct _IO_CONTEXT {
 	WSABUF       wsabuf;       // WSA类型的缓冲区，用于给重叠操作传参数的
 	char         buffer[MAX_BUFFER_LEN];// 这个是WSABUF里具体存字符的缓冲区  
 	IO_OPERATION opCode;       // 标识网络操作的类型(对应上面的枚举)
-	SOCKET       clientSocket; // 接受的客户端套接字
 	DWORD        nBytes;
 	DWORD        dwFlags;
 } IO_CONTEXT, *LP_IO_CONTEXT;
@@ -72,17 +71,16 @@ DWORD WINAPI WorkerThread(LPVOID WorkThreadContext) {
 
 		if (lpIOContext->opCode == IO_READ) {// a read operation complete
 
-			cout << "[客户端" << lpComKey->RemoteAddr << " 接受数据]" << lpIOContext->buffer << endl;
-			cout << dwIOBytes << endl;
-			cout << "lpIOContext->nBytes " << lpIOContext->nBytes << endl;
-
+			cout << "[客户端" << lpComKey->RemoteAddr << " 接受数据] 接受长度[" << dwIOBytes << "] " << lpIOContext->buffer << endl;
+	
 			strcat_s(lpIOContext->buffer, 1024, "爱白菜的小昆虫");
+			lpIOContext->wsabuf.len = strlen(lpIOContext->buffer) + 1;
 			lpIOContext->opCode = IO_OPERATION::IO_WRITE;
 			lpIOContext->nBytes = 0;
 			lpIOContext->dwFlags = 0;
 			// 投递发送的消息
 			int nRet = WSASend(
-				lpIOContext->clientSocket,
+				lpComKey->Socket,
 				&lpIOContext->wsabuf,
 				1,
 				&lpIOContext->nBytes,
@@ -91,7 +89,7 @@ DWORD WINAPI WorkerThread(LPVOID WorkThreadContext) {
 				NULL);
 			if (nRet == SOCKET_ERROR && ERROR_IO_PENDING != WSAGetLastError()) {
 				cout << "WASSend Failed::Reason Code::" << WSAGetLastError() << endl;
-				closesocket(lpIOContext->clientSocket);
+				closesocket(lpComKey->Socket);
 				delete lpIOContext;
 				delete lpComKey;
 				continue;
@@ -100,16 +98,15 @@ DWORD WINAPI WorkerThread(LPVOID WorkThreadContext) {
 		}
 		else if (lpIOContext->opCode == IO_WRITE) { //a write operation complete
 
-			cout << "[客户端"<< lpComKey->RemoteAddr << " 发送数据]" << lpIOContext->buffer << endl;
-			cout << dwIOBytes << endl;
-			cout << "lpIOContext->nBytes " << lpIOContext->nBytes << endl;
+			cout << "[客户端"<< lpComKey->RemoteAddr << " 发送数据] 发送长度[" << dwIOBytes << "] " << lpIOContext->buffer << endl;
 			// Write operation completed, so post Read operation.
+			lpIOContext->wsabuf.len = MAX_BUFFER_LEN;
 			lpIOContext->opCode = IO_OPERATION::IO_READ;
 			lpIOContext->nBytes = 0;
 			lpIOContext->dwFlags = 0;
 			// 投递接受的消息
 			int nRet = WSARecv(
-				lpIOContext->clientSocket,
+				lpComKey->Socket,
 				&lpIOContext->wsabuf,
 				1,
 				&lpIOContext->nBytes,
@@ -118,7 +115,7 @@ DWORD WINAPI WorkerThread(LPVOID WorkThreadContext) {
 				NULL);
 			if (nRet == SOCKET_ERROR && (ERROR_IO_PENDING != WSAGetLastError())) {
 				cout << "WASRecv Failed::Reason Code1::" << WSAGetLastError() << endl;
-				closesocket(lpIOContext->clientSocket);
+				closesocket(lpComKey->Socket);
 				delete lpIOContext;
 				delete lpComKey;
 				continue;
@@ -169,32 +166,32 @@ int main() {
 		hThread = CreateThread(NULL, 0, WorkerThread, 0, 0, &dwThreadId);
 		CloseHandle(hThread);
 	}
-
+	cout << "[服务器启动] 监听端口8888 ..." << endl;
 	while (1) {
 		LP_COMPLETION_KEY lpComKey = new COMPLETION_KEY;
 		lpComKey->AddrLen = sizeof(SOCKADDR_IN);
 		lpComKey->Socket = accept(listenSocket, (LPSOCKADDR)&lpComKey->Addr, &lpComKey->AddrLen);
 
 		sprintf_s(lpComKey->RemoteAddr, "%s:%u", inet_ntoa(lpComKey->Addr.sin_addr), ntohs(lpComKey->Addr.sin_port));
-		cout << lpComKey->RemoteAddr << " Client connected." << endl;
+		cout << "[客户端" << lpComKey->RemoteAddr << "连接]..." << endl;
 
 		// 客户端套接字绑定完成端口中
 		if (CreateIoCompletionPort((HANDLE)lpComKey->Socket, g_hIOCP, (ULONG_PTR)lpComKey, 0) == NULL) {
 			cout << "Binding Client Socket to IO Completion Port Failed::Reason Code::" << GetLastError() << endl;
 			closesocket(lpComKey->Socket);
+			delete lpComKey;
 		}
 		else { //post a recv request
 			LP_IO_CONTEXT lpIOContext = new IO_CONTEXT;
 			ZeroMemory(&lpIOContext->overlapped, sizeof(lpIOContext->overlapped));
 			lpIOContext->wsabuf.buf = lpIOContext->buffer;
-			lpIOContext->wsabuf.len = MAX_BUFFER_LEN/2;
+			lpIOContext->wsabuf.len = MAX_BUFFER_LEN;
 			lpIOContext->opCode = IO_READ;
-			lpIOContext->clientSocket = lpComKey->Socket;
 			lpIOContext->nBytes = 0;
 			lpIOContext->dwFlags = 0;
-			cout << "lpIOContext->nBytes " << lpIOContext->nBytes << endl;
 			// 投递一个接受消息
-			int nRet = WSARecv(lpComKey->Socket,
+			int nRet = WSARecv(
+				lpComKey->Socket,
 				&lpIOContext->wsabuf,
 				1,
 				&lpIOContext->nBytes,
@@ -208,7 +205,6 @@ int main() {
 				delete lpIOContext;
 				delete lpComKey;
 			}
-			cout << "lpIOContext->nBytes " << lpIOContext->nBytes << endl;
 		}
 	}
 	closesocket(listenSocket);

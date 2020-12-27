@@ -7,6 +7,9 @@ using namespace std;
 
 #pragma comment(lib,"ws2_32.lib")
 
+DWORD WINAPI SendThread(LPVOID lpParam);// 发送数据线程
+DWORD WINAPI RecvThread(LPVOID lpParam);// 接受数据线程
+
 int main(){
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -16,34 +19,64 @@ int main(){
     addr.sin_port = htons(8888);
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    SOCKET client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    int flag = connect(client, (sockaddr*)&addr, sizeof(addr));
+    int flag = connect(clientSocket, (sockaddr*)&addr, sizeof(addr));
     if (flag < 0) {
         cout << "error!" << endl;
         return -1;
     }
+    cout << "[连接服务器] 成功..." << endl;
+
+    DWORD dwThreadIdRecv = 0;
+    DWORD dwThreadIdSend = 0;
+    HANDLE hRecv = CreateThread(NULL, 0, RecvThread, (LPVOID)clientSocket, 0, &dwThreadIdRecv);
+    HANDLE hSend = CreateThread(NULL, 0, SendThread, (LPVOID)clientSocket, 0, &dwThreadIdSend);
+
     while (1) {
-        char buffer[1024] = "";
-        cout << "input>>";
-        cin >> buffer;
-        //strcpy(buffer, "hello");
-        send(client, buffer, strlen(buffer)+1, 0);
 
-        memset(buffer, 0, sizeof(buffer));
-
-        cout << "[服务器]";
-        if (recv(client, buffer, 1024, 0) <= 0) {
-            cout << "服务器断开连接..." << endl;
-            break;
-        }
-        cout << buffer << endl;
-        //Sleep(1000);
+        Sleep(1000);
     }
 
-    closesocket(client);
+    closesocket(clientSocket);
     WSACleanup();
 
     system("pause");
+    return 0;
+}
+
+// 发送数据线程
+DWORD WINAPI SendThread(LPVOID lpParam) {
+    SOCKET clientSocket = (SOCKET)lpParam;
+
+    int iRet;
+    char buffer[1024];
+    while (true) {
+        cin >> buffer;
+        //strcpy(buffer, "hello");
+        iRet = send(clientSocket, buffer, strlen(buffer) + 1, 0);
+        if (iRet <= 0) {
+            cout << "[服务器] 断开连接 ..." << endl;
+            break;
+        }
+        cout << "发送字节数：" << iRet << endl;
+    }
+
+    return 0;
+}
+// 接受数据线程
+DWORD WINAPI RecvThread(LPVOID lpParam) {
+    SOCKET clientSocket = (SOCKET)lpParam;
+
+    int iRet;
+    char buffer[1024];
+    while (true) {
+        iRet = recv(clientSocket, buffer, 1024, 0);
+        if (iRet <= 0) {
+            cout << "服务器断开连接..." << endl;
+            break;
+        }
+        cout << "接受数据长度：[" << iRet << "] [服务器] " << buffer << endl;
+    }
     return 0;
 }
