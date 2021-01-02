@@ -10,7 +10,7 @@ using namespace std;
 DWORD WINAPI SendThread(LPVOID lpParam);// 发送数据线程
 DWORD WINAPI RecvThread(LPVOID lpParam);// 接受数据线程
 
-int main(){
+int main() {
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
 
@@ -19,26 +19,31 @@ int main(){
     addr.sin_port = htons(8888);
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    SOCKET ClientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (ClientSocket == INVALID_SOCKET) {
+        printf("[客户端] 创建套接字失败，错误码：%d\n", GetLastError());
+        return -1;
+    }
 
-    int flag = connect(clientSocket, (sockaddr*)&addr, sizeof(addr));
+
+    int flag = connect(ClientSocket, (sockaddr*)&addr, sizeof(addr));
     if (flag < 0) {
         cout << "error!" << endl;
         return -1;
     }
-    cout << "[连接服务器] 成功..." << endl;
+    printf("[连接服务器] 成功...\n");
 
     DWORD dwThreadIdRecv = 0;
     DWORD dwThreadIdSend = 0;
-    HANDLE hRecv = CreateThread(NULL, 0, RecvThread, (LPVOID)clientSocket, 0, &dwThreadIdRecv);
-    HANDLE hSend = CreateThread(NULL, 0, SendThread, (LPVOID)clientSocket, 0, &dwThreadIdSend);
+    HANDLE hRecv = CreateThread(NULL, 0, RecvThread, (LPVOID)ClientSocket, 0, &dwThreadIdRecv);
+    HANDLE hSend = CreateThread(NULL, 0, SendThread, (LPVOID)ClientSocket, 0, &dwThreadIdSend);
 
     while (1) {
 
         Sleep(1000);
     }
 
-    closesocket(clientSocket);
+    closesocket(ClientSocket);
     WSACleanup();
 
     system("pause");
@@ -47,36 +52,37 @@ int main(){
 
 // 发送数据线程
 DWORD WINAPI SendThread(LPVOID lpParam) {
-    SOCKET clientSocket = (SOCKET)lpParam;
+    SOCKET ClientSocket = (SOCKET)lpParam;
 
     int iRet;
     char buffer[1024];
     while (true) {
-        cin >> buffer;
+        scanf("%s", buffer);
         //strcpy(buffer, "hello");
-        iRet = send(clientSocket, buffer, strlen(buffer) + 1, 0);
+        iRet = send(ClientSocket, buffer, strlen(buffer) + 1, 0);
         if (iRet <= 0) {
-            cout << "[服务器] 断开连接 ..." << endl;
+            printf("[服务器] 断开...\n");
             break;
         }
-        cout << "发送字节数：" << iRet << endl;
+        printf("发送数据长度[%d]\n", iRet);
     }
 
     return 0;
 }
 // 接受数据线程
 DWORD WINAPI RecvThread(LPVOID lpParam) {
-    SOCKET clientSocket = (SOCKET)lpParam;
+    SOCKET ClientSocket = (SOCKET)lpParam;
 
     int iRet;
     char buffer[1024];
     while (true) {
-        iRet = recv(clientSocket, buffer, 1024, 0);
+        iRet = recv(ClientSocket, buffer, 1024, 0);
         if (iRet <= 0) {
-            cout << "服务器断开连接..." << endl;
+            printf("[服务器] 断开...\n");
             break;
         }
-        cout << "接受数据长度：[" << iRet << "] [服务器] " << buffer << endl;
+        printf("[服务器] 数据长度[%d]\n", iRet);
+        printf("[服务器] 接受数据[%s]\n", buffer);
     }
     return 0;
 }

@@ -292,10 +292,27 @@ void main ()
 }
 ```
 
+# 获取CPU核数
 
+	// 获取CPU核数
+	SYSTEM_INFO sysInfo;
+	GetSystemInfo(&sysInfo);
+	int g_ThreadCount = sysInfo.dwNumberOfProcessors * 2;
+	 //创建完成端口g_hIOCP
+	g_hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, g_ThreadCount);
+	
+	CreateIoCompletionPort((HANDLE)m_socket,g_hIOCP,0,0);
+	 //创建工作线程池数量 CPU核数*2
+	for (int i = 0; i < g_ThreadCount; ++i) {
+		HANDLE hThread;
+		DWORD dwThreadId;
+		hThread = CreateThread(NULL, 0, WorkerThread, (LPVOID)&listenComKey, 0, &dwThreadId);
+		CloseHandle(hThread);
+	}
 
+# 微软帮助文档
 
-
+https://docs.microsoft.com/en-us/windows/win32/api/mswsock/nf-mswsock-acceptex
 
 
 
