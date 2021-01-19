@@ -25,7 +25,6 @@ int main() {
         return -1;
     }
 
-
     int flag = connect(ClientSocket, (sockaddr*)&addr, sizeof(addr));
     if (flag < 0) {
         cout << "error!" << endl;
