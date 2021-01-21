@@ -8,6 +8,7 @@
 #include <Mswsock.h>
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 #include <string>
 #include <iostream>
 #include <list>
@@ -19,10 +20,10 @@ using namespace std;
 
 #define MAX_BUFFER_LEN 1024
 
-enum IO_TPYE { 
+enum IO_TPYE {
 	IO_ACCPET = 0,
-	IO_READ   = 1,
-	IO_WRITE  = 2
+	IO_READ = 1,
+	IO_WRITE = 2
 };
 
 //typedef struct _PER_SOCKET_CONTEXT {
@@ -39,25 +40,30 @@ typedef struct _IO_CONTEXT {
 	CHAR         Buffer[MAX_BUFFER_LEN];// 这个是WSABUF里具体存字符的缓冲区  
 	IO_TPYE      OpCode;       // 标识网络操作的类型(对应上面的枚举)
 	SOCKET       AcceptSocket;
-} IO_CONTEXT, *LP_IO_CONTEXT;
+} IO_CONTEXT, * LP_IO_CONTEXT;
 
 char sz[] = "255.255.255.255:65535";
 
 typedef struct _COM_KEY {
 	SOCKET Socket;// 接受套接字
 	CHAR   RemoteAddr[32];// 地址和端口
-} COM_KEY, *LP_COM_KEY;
+} COM_KEY, * LP_COM_KEY;
 
 typedef struct _DATA {
 	SOCKET ListenSocket;// 监听套接字
 	CHAR   RemoteAddr[32];// 地址和端口
 	HANDLE HIOCP;// 完成端口句柄
-} DATA, *LP_DATA;
+} DATA, * LP_DATA;
 
 // 增加临界区互斥锁
-//list<LP_IO_CONTEXT> g_listIOContext;
-//list<LP_COM_KEY> g_listComKey;
+CRITICAL_SECTION _critical;
+list<LP_COM_KEY> g_listComKey;
 
+void AddComKey(LP_COM_KEY lpComKey) {
+	EnterCriticalSection(&_critical);
+	g_listComKey.push_back(lpComKey);
+	LeaveCriticalSection(&_critical);
+}
 
 // 初始化
 BOOL WinSockInit() {
@@ -85,7 +91,7 @@ BOOL AssociationCompletionPort(LP_DATA lpData, LP_COM_KEY lpComKey) {
 
 // 投递连接请求
 BOOL PostAccept(LP_DATA lpData) {
-	DWORD nBytesRecv = 0, dwFlags = 0;
+	DWORD nBytesRecv = 0;
 	LP_IO_CONTEXT lpIOContext = new IO_CONTEXT();
 	lpIOContext->OpCode = IO_ACCPET;
 	int len = sizeof(SOCKADDR_IN);
@@ -110,28 +116,27 @@ BOOL PostAccept(LP_DATA lpData) {
 }
 
 // 投递发送数据
-BOOL PostSend(LP_COM_KEY lpComKey, PCCH buffer, ULONG dwSizeBytes) {
-	DWORD nBytesSend = 0, dwFlags = 0;
-	LP_IO_CONTEXT lpIOContext = new IO_CONTEXT();
-	lpIOContext->OpCode = IO_WRITE;
-
-	WSABUF wsabuf = { 0 };
-	wsabuf.buf = lpIOContext->Buffer;
-	wsabuf.len = dwSizeBytes;
-	// 投递发送的消息
-	int nRet = WSASend(
-		lpComKey->Socket,
-		&wsabuf,
-		1,
-		&nBytesSend,
-		dwFlags,
-		&lpIOContext->Overlapped,
-		NULL);
-	// 投递接受数据失败失败
-	if (nRet == SOCKET_ERROR && ERROR_IO_PENDING != WSAGetLastError()) {
-		printf("[客户端%s] 投递WSASend失败... 错误码：%d\n", lpComKey->RemoteAddr, WSAGetLastError());
-		return FALSE;
+BOOL PostSend(PCCH buffer, ULONG dwSizeBytes) {
+	EnterCriticalSection(&_critical);
+	for (list<LP_COM_KEY>::iterator it = g_listComKey.begin(); it != g_listComKey.end(); ++it) {
+		LP_IO_CONTEXT lpIOContext = new IO_CONTEXT();
+		lpIOContext->OpCode = IO_WRITE;
+		strcat(lpIOContext->Buffer, buffer);
+		WSABUF wsabuf = { 0 };
+		wsabuf.buf = lpIOContext->Buffer;
+		wsabuf.len = dwSizeBytes;
+		// 投递发送的消息
+		DWORD nBytesSend = 0, dwFlags = 0;
+		int nRet = WSASend(
+			(*it)->Socket,
+			&wsabuf,
+			1,
+			&nBytesSend,
+			dwFlags,
+			&lpIOContext->Overlapped,
+			NULL);
 	}
+	LeaveCriticalSection(&_critical);
 	return TRUE;
 }
 
@@ -168,7 +173,6 @@ DWORD WINAPI WorkerThread(LPVOID lpParam) {
 	LP_IO_CONTEXT lpIOContext;
 	DWORD dwTrans;
 	LP_COM_KEY lpComKey;
-	BOOL bIORet;
 
 	//InterlockedIncrement(&threadNums);
 
@@ -177,7 +181,7 @@ DWORD WINAPI WorkerThread(LPVOID lpParam) {
 		dwTrans = 0;
 		lpComKey = NULL;
 
-		bIORet = GetQueuedCompletionStatus(
+		BOOL bIORet = GetQueuedCompletionStatus(
 			lpData->HIOCP,//完成端口句柄
 			&dwTrans,//一次I/O操作所传送的字节数，如果是接受：表示一次接受了多少字节数据，如果是发送：表示一次发送了多少字节数据。
 			(PULONG_PTR)&lpComKey,//当文件I/O操作完成后，用于存放与之关联的CK
@@ -187,26 +191,27 @@ DWORD WINAPI WorkerThread(LPVOID lpParam) {
 		if (dwTrans == 0 && (lpIOContext->OpCode == IO_READ || lpIOContext->OpCode == IO_WRITE)) {
 			printf("[客户端 %s] 断开连接...\n", lpComKey->RemoteAddr);
 			closesocket(lpComKey->Socket);
+			// list中移除套接字
+
 			delete lpComKey;
 			delete lpIOContext;
 			continue;
 		}
 
-		// 普通套接字
-		//LP_IO_CONTEXT lpIOContext = (LP_IO_CONTEXT)lpOverlapped;
-		//LP_IO_CONTEXT lpIOContext = CONTAINING_RECORD(lpOverlapped, IO_CONTEXT, Overlapped);
 		if (bIORet && lpIOContext && lpComKey) {
 			if (lpIOContext->OpCode == IO_READ) {
 				printf("[接受 客户端%s 数据] 接受数据长度[%d] 接受的数据[%s]\n", lpComKey->RemoteAddr, dwTrans, lpIOContext->Buffer);
-				PostSend(lpComKey, "服务器收到消息", 15);
+				PostRecv(lpComKey);
+				CHAR msg[1024];
+				sprintf(msg, "[%s] %s", lpComKey->RemoteAddr, lpIOContext->Buffer);
+				int len = strlen(msg) + 1;
+				PostSend(msg, len);
 			}
 			else if (lpIOContext->OpCode == IO_WRITE) {
 				printf("[发送 客户端%s 数据] 发送数据长度[%d]\n", lpComKey->RemoteAddr, dwTrans);
-				PostRecv(lpComKey);
 			}
 			else if (lpIOContext->OpCode == IO_ACCPET) {
 				QueueUserWorkItem(WorkerThread, lpParam, WT_EXECUTELONGFUNCTION);
-				printf("[客户端连接]...\n");
 
 				PSOCKADDR_IN addrClient = NULL;
 				PSOCKADDR_IN addrLocal = NULL;
@@ -222,6 +227,7 @@ DWORD WINAPI WorkerThread(LPVOID lpParam) {
 				sprintf(lpComKeyT->RemoteAddr, "%s:%d", inet_ntoa(addrClient->sin_addr), ntohs(addrClient->sin_port));
 				printf("[客户端%s]连接成功\n", lpComKeyT->RemoteAddr);
 
+				AddComKey(lpComKeyT);
 
 				AssociationCompletionPort(lpData, lpComKeyT);
 				PostRecv(lpComKeyT);
@@ -232,15 +238,25 @@ DWORD WINAPI WorkerThread(LPVOID lpParam) {
 		else if (!lpComKey && !lpIOContext) {
 			// exit the thread
 		}
+		if (lpIOContext) {
+			delete lpIOContext;// 释放内存
+		}
 	}
 	//InterlockedDecrement(&threadNums);
 	printf("线程退出...\n");
 	return 0;
 }
 
+void sighandler(int signum) {
+	printf("退出信号%d\n", signum);
+	exit(-1);
+}
+
 int main() {
 	// 增加中断信号量处理
-	// ..............
+	signal(SIGINT, sighandler);
+	// 初始化临界区
+	InitializeCriticalSection(&_critical);
 
 	WinSockInit();
 
@@ -257,7 +273,7 @@ int main() {
 		return -1;
 	}
 
-	SOCKADDR_IN Addr = {0};
+	SOCKADDR_IN Addr = { 0 };
 	Addr.sin_family = AF_INET;
 	Addr.sin_port = htons(8888);
 	Addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -295,5 +311,9 @@ int main() {
 	WSACleanup();
 	delete lpData;
 	delete lpComKey;
+	// 删除释放临界区资源
+	DeleteCriticalSection(&_critical);
+
+	printf("Line :%d\n", __LINE__);
 	return 0;
 }

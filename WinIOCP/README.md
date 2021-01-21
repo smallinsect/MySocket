@@ -314,11 +314,53 @@ void main ()
 
 https://docs.microsoft.com/en-us/windows/win32/api/mswsock/nf-mswsock-acceptex
 
+## 信号量函数
 
+```c++
+#include <signal.h>
 
+void sighandler(int signum) {
+	printf("退出信号%d\n", signum);
+	exit(-1);
+}
 
+// 增加中断信号量处理
+signal(SIGINT, sighandler);
+```
+## 宏定义
 
+| DATE     | 当前日期，一个以 "MMM DD YYYY" 格式表示的字符常量。 |
+| -------- | :-------------------------------------------------- |
+|  TIME    | 当前时间，一个以 "HH:MM:SS" 格式表示的字符常量。    |
+|  FILE    | 这会包含当前文件名，一个字符串常量。                |
+|  LINE    | 这会包含当前行号，一个十进制常量。                  |
+|  STDC    | 当编译器以 ANSI 标准编译时，则定义为 1。            |
 
+```c++
+printf("File :%s\n", __FILE__ );
+printf("Date :%s\n", __DATE__ );
+printf("Time :%s\n", __TIME__ );
+printf("Line :%d\n", __LINE__ );
+printf("ANSI :%d\n", __STDC__ );
+```
+
+## 临界区
+
+```c++
+适用范围：它只能同步一个进程中的线程，不能跨进程同步。一般用它来做单个进程内的代码快同步,效率比较高。
+相关结构：
+CRITICAL_SECTION _critical
+相关方法：
+// 初始化临界区
+InitializeCriticalSection(&_critical);
+// 删除释放临界区资源
+DeleteCriticalSection(&_critical);
+// 进入临界区
+EnterCriticalSection(&_critical);
+// 离开临界区
+LeaveCriticalSection(& _critical);
+
+```
 
 
 
