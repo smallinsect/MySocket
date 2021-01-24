@@ -26,15 +26,6 @@ enum IO_TPYE {
 	IO_WRITE = 2
 };
 
-//typedef struct _PER_SOCKET_CONTEXT {
-//	SOCKET      m_Socket;
-//	// 每一个客户端连接的Socket  
-//	SOCKADDR_IN m_ClientAddr;
-//	// 客户端的地址  
-//	CArray<_PER_IO_CONTEXT*> m_arrayIoContext;
-//	// 客户端网络操作的上下文数据，  
-//}PER_SOCKET_CONTEXT, *LP_PER_SOCKET_CONTEXT;
-
 typedef struct _IO_CONTEXT {
 	OVERLAPPED   Overlapped;   // 每一个重叠网络操作的重叠结构(针对每一个Socket的每一个操作，都要有一个)
 	CHAR         Buffer[MAX_BUFFER_LEN];// 这个是WSABUF里具体存字符的缓冲区  
@@ -85,7 +76,6 @@ BOOL AssociationCompletionPort(LP_DATA lpData, LP_COM_KEY lpComKey) {
 		cout << "套接字绑定完成端口失败..." << WSAGetLastError() << endl;
 		return FALSE;
 	}
-	//g_listComKey.push_back(lpComKey);
 	return TRUE;
 }
 
